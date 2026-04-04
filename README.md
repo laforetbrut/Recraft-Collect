@@ -142,6 +142,10 @@ Chaque aliment est converti en unités selon sa **valeur nutritive** (points de 
 | `/fc milestone removecmd <seuil> <index>` | Supprime une commande par index |
 | `/fc milestone list` | Liste tous les paliers |
 | `/fc milestone reload` | Recharge les paliers depuis le fichier config |
+| `/fc milestone resetreached` | Remet tous les paliers a "non atteint" (re-declenchables) |
+| `/fc leaderboard set` | Place le leaderboard (top 10 armor stands) sur le bloc regarde |
+| `/fc leaderboard remove` | Supprime le leaderboard |
+| `/fc leaderboard refresh` | Force la mise a jour du leaderboard |
 | `/fc info` | Affiche les informations détaillées |
 | `/fc reset confirm` | Réinitialise tous les scores et paliers *(OP 3, irréversible)* |
 

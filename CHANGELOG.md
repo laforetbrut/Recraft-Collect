@@ -1,5 +1,26 @@
 # Changelog
 
+## v1.3.0
+
+### Nouveautes
+
+- **Leaderboard en jeu (armor stands)** : affichage visuel du top 10 dans le monde
+  - `/fc leaderboard set` pour placer le leaderboard (regarder un bloc)
+  - `/fc leaderboard remove` pour le supprimer
+  - `/fc leaderboard refresh` pour forcer la mise a jour
+  - Se met a jour automatiquement a chaque depot de nourriture
+  - Affiche le titre, score global, et les 10 meilleurs joueurs avec couleurs (or, argent, bronze)
+- **Reset des paliers atteints** :
+  - `/fc milestone resetreached` remet tous les paliers a "non atteint" (ils pourront se redeclencher)
+  - `/fc reset confirm` reinitialise aussi les paliers atteints (corrige le bug ou les paliers ne se redesclenchaient pas apres un reset)
+
+### Corrections
+
+- **Fix** : les paliers se re-declenchent correctement apres un `/fc reset confirm`
+- La position du leaderboard est sauvegardee dans la sauvegarde du monde
+
+---
+
 ## v1.2.0
 
 ### Nouveautes

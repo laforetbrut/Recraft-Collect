@@ -47,6 +47,10 @@ public class FoodScoreManager extends SavedData {
     // ─── Item Value Overrides (registry name → value) ──────────
     private final Map<String, Integer> itemValueOverrides = new HashMap<>();
 
+    // ─── Leaderboard Display Position ──────────────────────────
+    private BlockPos leaderboardPos = null;
+    private ResourceKey<Level> leaderboardDimension = null;
+
     public FoodScoreManager() {
     }
 
@@ -110,6 +114,16 @@ public class FoodScoreManager extends SavedData {
         for (int i = 0; i < overrideList.size(); i++) {
             CompoundTag ot = overrideList.getCompound(i);
             manager.itemValueOverrides.put(ot.getString("Item"), ot.getInt("Value"));
+        }
+
+        // Leaderboard position
+        if (tag.contains("LeaderX")) {
+            manager.leaderboardPos = new BlockPos(
+                    tag.getInt("LeaderX"), tag.getInt("LeaderY"), tag.getInt("LeaderZ"));
+            if (tag.contains("LeaderDim")) {
+                manager.leaderboardDimension = ResourceKey.create(
+                        Registries.DIMENSION, new ResourceLocation(tag.getString("LeaderDim")));
+            }
         }
 
         return manager;
@@ -178,6 +192,16 @@ public class FoodScoreManager extends SavedData {
             overrideList.add(ot);
         }
         tag.put("ItemOverrides", overrideList);
+
+        // Leaderboard position
+        if (leaderboardPos != null) {
+            tag.putInt("LeaderX", leaderboardPos.getX());
+            tag.putInt("LeaderY", leaderboardPos.getY());
+            tag.putInt("LeaderZ", leaderboardPos.getZ());
+            if (leaderboardDimension != null) {
+                tag.putString("LeaderDim", leaderboardDimension.location().toString());
+            }
+        }
 
         return tag;
     }
@@ -254,6 +278,11 @@ public class FoodScoreManager extends SavedData {
 
     public void clearMilestoneReached(long threshold) {
         milestonesReached.remove(threshold);
+        setDirty();
+    }
+
+    public void resetAllMilestonesReached() {
+        milestonesReached.clear();
         setDirty();
     }
 
@@ -334,6 +363,23 @@ public class FoodScoreManager extends SavedData {
         }
         setDirty();
         return nowHidden;
+    }
+
+    // ─── Leaderboard Display ─────────────────────────────────
+
+    public BlockPos getLeaderboardPos() { return leaderboardPos; }
+    public ResourceKey<Level> getLeaderboardDimension() { return leaderboardDimension; }
+
+    public void setLeaderboardPos(BlockPos pos, ResourceKey<Level> dimension) {
+        this.leaderboardPos = pos;
+        this.leaderboardDimension = dimension;
+        setDirty();
+    }
+
+    public void removeLeaderboardPos() {
+        this.leaderboardPos = null;
+        this.leaderboardDimension = null;
+        setDirty();
     }
 
     // ─── Access ────────────────────────────────────────────────

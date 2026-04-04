@@ -4,6 +4,7 @@ import com.vyrriox.recraftcollect.command.FoodScoreCommand;
 import com.vyrriox.recraftcollect.config.MilestoneConfig;
 import com.vyrriox.recraftcollect.data.FoodScoreManager;
 import com.vyrriox.recraftcollect.data.FoodUnitCalculator;
+import com.vyrriox.recraftcollect.leaderboard.LeaderboardDisplay;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -114,6 +115,16 @@ public class ReCraftCollect {
 
         double distSq = player.blockPosition().distSqr(center);
         return distSq <= (double) radius * radius;
+    }
+
+    // ─── Leaderboard ───────────────────────────────────────────
+
+    public static void refreshLeaderboard(MinecraftServer server) {
+        FoodScoreManager manager = FoodScoreManager.get(server);
+        BlockPos pos = manager.getLeaderboardPos();
+        if (pos != null && manager.getLeaderboardDimension() != null) {
+            LeaderboardDisplay.createOrUpdate(server, pos, manager.getLeaderboardDimension());
+        }
     }
 
     // ─── Milestones ────────────────────────────────────────────
@@ -247,6 +258,7 @@ public class ReCraftCollect {
                 manager.addScore(player.getUUID(), totalUnits);
                 updateBossBar(player.server);
                 checkMilestones(player.server);
+                refreshLeaderboard(player.server);
                 sendDepositFeedback(player, totalUnits, manager.getPlayerScore(player.getUUID()), event);
             } else {
                 player.displayClientMessage(

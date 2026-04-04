@@ -8,6 +8,7 @@ import com.vyrriox.recraftcollect.ReCraftCollect;
 import com.vyrriox.recraftcollect.config.MilestoneConfig;
 import com.vyrriox.recraftcollect.data.FoodScoreManager;
 import com.vyrriox.recraftcollect.data.FoodUnitCalculator;
+import com.vyrriox.recraftcollect.leaderboard.LeaderboardDisplay;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -102,7 +103,19 @@ public class FoodScoreCommand {
                         .then(Commands.literal("list")
                                 .executes(ctx -> listMilestones(ctx.getSource())))
                         .then(Commands.literal("reload")
-                                .executes(ctx -> reloadMilestones(ctx.getSource()))))
+                                .executes(ctx -> reloadMilestones(ctx.getSource())))
+                        .then(Commands.literal("resetreached")
+                                .executes(ctx -> resetMilestonesReached(ctx.getSource()))))
+
+                // ─── Admin: Leaderboard ────────────────────────
+                .then(Commands.literal("leaderboard")
+                        .requires(src -> src.hasPermission(2))
+                        .then(Commands.literal("set")
+                                .executes(ctx -> setLeaderboard(ctx.getSource())))
+                        .then(Commands.literal("remove")
+                                .executes(ctx -> removeLeaderboard(ctx.getSource())))
+                        .then(Commands.literal("refresh")
+                                .executes(ctx -> refreshLeaderboard(ctx.getSource()))))
 
                 // ─── Admin: Item Values ────────────────────────
                 .then(Commands.literal("setvalue")
@@ -255,6 +268,7 @@ public class FoodScoreCommand {
             manager.addScore(player.getUUID(), units);
             ReCraftCollect.updateBossBar(player.server);
             ReCraftCollect.checkMilestones(player.server);
+            ReCraftCollect.refreshLeaderboard(player.server);
 
             source.sendSuccess(() -> Component.literal("+" + NF.format(units) + " unites deposees !")
                     .withStyle(ChatFormatting.GREEN), false);
@@ -287,6 +301,7 @@ public class FoodScoreCommand {
             manager.addScore(player.getUUID(), totalUnits);
             ReCraftCollect.updateBossBar(player.server);
             ReCraftCollect.checkMilestones(player.server);
+            ReCraftCollect.refreshLeaderboard(player.server);
 
             long finalUnits = totalUnits;
             source.sendSuccess(() -> Component.literal("+" + NF.format(finalUnits) + " unites deposees !")
@@ -326,6 +341,7 @@ public class FoodScoreCommand {
         manager.addScore(target.getUUID(), amount);
         ReCraftCollect.updateBossBar(source.getServer());
         ReCraftCollect.checkMilestones(source.getServer());
+        ReCraftCollect.refreshLeaderboard(source.getServer());
 
         String targetName = target.getGameProfile().getName();
         source.sendSuccess(() -> Component.literal("+" + NF.format(amount) + " unites donnees a " + targetName)
@@ -473,6 +489,62 @@ public class FoodScoreCommand {
         return 1;
     }
 
+    private static int resetMilestonesReached(CommandSourceStack source) {
+        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        manager.resetAllMilestonesReached();
+        source.sendSuccess(() -> Component.literal("Statut des paliers atteints reinitialise. Ils pourront se redeclencher.")
+                .withStyle(ChatFormatting.GREEN), true);
+        return 1;
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  ADMIN: LEADERBOARD (armor stands)
+    // ═══════════════════════════════════════════════════════════
+
+    private static int setLeaderboard(CommandSourceStack source) {
+        try {
+            ServerPlayer player = source.getPlayerOrException();
+            HitResult hit = player.pick(5.0, 0.0f, false);
+            if (hit.getType() != HitResult.Type.BLOCK) {
+                source.sendFailure(Component.literal("Regardez un bloc pour placer le leaderboard !"));
+                return 0;
+            }
+
+            BlockPos pos = ((BlockHitResult) hit).getBlockPos().above();
+            FoodScoreManager manager = FoodScoreManager.get(player.server);
+            manager.setLeaderboardPos(pos, player.level().dimension());
+
+            LeaderboardDisplay.createOrUpdate(player.server, pos, player.level().dimension());
+
+            source.sendSuccess(() -> Component.literal("Leaderboard place en [" +
+                            pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "]")
+                    .withStyle(ChatFormatting.GREEN), true);
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("Cette commande necessite un joueur."));
+        }
+        return 1;
+    }
+
+    private static int removeLeaderboard(CommandSourceStack source) {
+        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        LeaderboardDisplay.removeFromServer(source.getServer());
+        manager.removeLeaderboardPos();
+        source.sendSuccess(() -> Component.literal("Leaderboard supprime.").withStyle(ChatFormatting.YELLOW), true);
+        return 1;
+    }
+
+    private static int refreshLeaderboard(CommandSourceStack source) {
+        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        BlockPos pos = manager.getLeaderboardPos();
+        if (pos == null) {
+            source.sendFailure(Component.literal("Aucun leaderboard defini. Utilisez /fc leaderboard set."));
+            return 0;
+        }
+        LeaderboardDisplay.createOrUpdate(source.getServer(), pos, manager.getLeaderboardDimension());
+        source.sendSuccess(() -> Component.literal("Leaderboard actualise.").withStyle(ChatFormatting.GREEN), false);
+        return 1;
+    }
+
     // ═══════════════════════════════════════════════════════════
     //  ADMIN: ITEM VALUES
     // ═══════════════════════════════════════════════════════════
@@ -605,6 +677,7 @@ public class FoodScoreCommand {
     private static int resetScores(CommandSourceStack source) {
         FoodScoreManager.get(source.getServer()).resetAllScores();
         ReCraftCollect.updateBossBar(source.getServer());
+        ReCraftCollect.refreshLeaderboard(source.getServer());
         source.sendSuccess(() -> Component.literal("Tous les scores ont ete reinitialises !")
                 .withStyle(ChatFormatting.RED, ChatFormatting.BOLD), true);
         for (ServerPlayer p : source.getServer().getPlayerList().getPlayers()) {
@@ -658,6 +731,17 @@ public class FoodScoreCommand {
         source.sendSuccess(() -> Component.literal("Paliers: ").withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal(MilestoneConfig.getMilestones().size() + " (config/recraftcollect-milestones.json)")
                         .withStyle(ChatFormatting.WHITE)), false);
+
+        // Leaderboard
+        BlockPos lbPos = manager.getLeaderboardPos();
+        if (lbPos == null) {
+            source.sendSuccess(() -> Component.literal("Leaderboard: ").withStyle(ChatFormatting.YELLOW)
+                    .append(Component.literal("non defini").withStyle(ChatFormatting.RED)), false);
+        } else {
+            source.sendSuccess(() -> Component.literal("Leaderboard: ").withStyle(ChatFormatting.YELLOW)
+                    .append(Component.literal("[" + lbPos.getX() + ", " + lbPos.getY() + ", " + lbPos.getZ() + "]")
+                            .withStyle(ChatFormatting.GREEN)), false);
+        }
 
         return 1;
     }

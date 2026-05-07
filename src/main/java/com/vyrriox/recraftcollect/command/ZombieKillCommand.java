@@ -6,8 +6,8 @@ import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.vyrriox.recraftcollect.ReCraftCollect;
 import com.vyrriox.recraftcollect.config.MilestoneConfig;
-import com.vyrriox.recraftcollect.data.FoodScoreManager;
-import com.vyrriox.recraftcollect.data.FoodUnitCalculator;
+import com.vyrriox.recraftcollect.config.ZombieValueConfig;
+import com.vyrriox.recraftcollect.data.ZombieScoreManager;
 import com.vyrriox.recraftcollect.leaderboard.LeaderboardDisplay;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -16,10 +16,8 @@ import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -27,12 +25,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
-public class FoodScoreCommand {
+public class ZombieKillCommand {
 
     private static final NumberFormat NF = NumberFormat.getInstance(Locale.FRANCE);
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("fc")
+        dispatcher.register(Commands.literal("zk")
                 .executes(ctx -> showHelp(ctx.getSource()))
 
                 // ─── Player commands ───────────────────────────
@@ -41,12 +39,6 @@ public class FoodScoreCommand {
 
                 .then(Commands.literal("top")
                         .executes(ctx -> showTop(ctx.getSource())))
-
-                .then(Commands.literal("deposit")
-                        .executes(ctx -> depositHeld(ctx.getSource())))
-
-                .then(Commands.literal("depositall")
-                        .executes(ctx -> depositAll(ctx.getSource())))
 
                 .then(Commands.literal("bossbar")
                         .executes(ctx -> toggleBossBar(ctx.getSource())))
@@ -115,31 +107,32 @@ public class FoodScoreCommand {
                         .then(Commands.literal("remove")
                                 .executes(ctx -> removeLeaderboard(ctx.getSource())))
                         .then(Commands.literal("refresh")
-                                .executes(ctx -> refreshLeaderboard(ctx.getSource()))))
+                                .executes(ctx -> refreshLeaderboard(ctx.getSource())))
+                        .then(Commands.literal("show")
+                                .executes(ctx -> showTop(ctx.getSource()))))
 
-                // ─── Admin: Item Values ────────────────────────
+                // ─── Admin: Zombie Values ──────────────────────
                 .then(Commands.literal("setvalue")
                         .requires(src -> src.hasPermission(2))
-                        .then(Commands.argument("value", IntegerArgumentType.integer(0, 10000))
-                                .executes(ctx -> setItemValue(ctx.getSource(),
-                                        IntegerArgumentType.getInteger(ctx, "value")))))
+                        .then(Commands.argument("entity_id", StringArgumentType.string())
+                                .then(Commands.argument("points", IntegerArgumentType.integer(0, 100000))
+                                        .executes(ctx -> setZombieValue(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "entity_id"),
+                                                IntegerArgumentType.getInteger(ctx, "points"))))))
 
                 .then(Commands.literal("removevalue")
                         .requires(src -> src.hasPermission(2))
-                        .executes(ctx -> removeItemValue(ctx.getSource())))
+                        .then(Commands.argument("entity_id", StringArgumentType.string())
+                                .executes(ctx -> removeZombieValue(ctx.getSource(),
+                                        StringArgumentType.getString(ctx, "entity_id")))))
 
                 .then(Commands.literal("listvalues")
                         .requires(src -> src.hasPermission(2))
-                        .executes(ctx -> listItemValues(ctx.getSource())))
+                        .executes(ctx -> listZombieValues(ctx.getSource())))
 
-                // ─── Admin: Collection Point ───────────────────
-                .then(Commands.literal("setpoint")
+                .then(Commands.literal("reloadvalues")
                         .requires(src -> src.hasPermission(2))
-                        .executes(ctx -> setPoint(ctx.getSource())))
-
-                .then(Commands.literal("removepoint")
-                        .requires(src -> src.hasPermission(2))
-                        .executes(ctx -> removePoint(ctx.getSource())))
+                        .executes(ctx -> reloadZombieValues(ctx.getSource())))
 
                 // ─── Admin: Boss Bar Zone ──────────────────────
                 .then(Commands.literal("setcenter")
@@ -169,36 +162,32 @@ public class FoodScoreCommand {
     // ═══════════════════════════════════════════════════════════
 
     private static int showHelp(CommandSourceStack source) {
-        source.sendSuccess(() -> Component.literal("=== ReCraft Collect ===").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
-        source.sendSuccess(() -> Component.literal("/fc score").withStyle(ChatFormatting.YELLOW)
+        source.sendSuccess(() -> Component.literal("=== Purger le monde ===").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
+        source.sendSuccess(() -> Component.literal("/zk score").withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal(" - Voir votre score").withStyle(ChatFormatting.GRAY)), false);
-        source.sendSuccess(() -> Component.literal("/fc top").withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal(" - Classement des joueurs").withStyle(ChatFormatting.GRAY)), false);
-        source.sendSuccess(() -> Component.literal("/fc deposit").withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal(" - Deposer la nourriture en main").withStyle(ChatFormatting.GRAY)), false);
-        source.sendSuccess(() -> Component.literal("/fc depositall").withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal(" - Deposer toute la nourriture").withStyle(ChatFormatting.GRAY)), false);
-        source.sendSuccess(() -> Component.literal("/fc bossbar").withStyle(ChatFormatting.YELLOW)
+        source.sendSuccess(() -> Component.literal("/zk top").withStyle(ChatFormatting.YELLOW)
+                .append(Component.literal(" - Classement des chasseurs").withStyle(ChatFormatting.GRAY)), false);
+        source.sendSuccess(() -> Component.literal("/zk bossbar").withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal(" - Afficher/masquer la barre").withStyle(ChatFormatting.GRAY)), false);
         source.sendSuccess(() -> Component.literal(""), false);
-        source.sendSuccess(() -> Component.literal("Clic droit sur le collecteur pour deposer !").withStyle(ChatFormatting.DARK_GRAY), false);
-        source.sendSuccess(() -> Component.literal("Sneak + clic droit = deposer tout l'inventaire").withStyle(ChatFormatting.DARK_GRAY), false);
+        source.sendSuccess(() -> Component.literal("Tuez des zombies pour gagner des points !").withStyle(ChatFormatting.DARK_GRAY), false);
+        source.sendSuccess(() -> Component.literal("1 / 15 / 50 / 100 / 2000 selon la dangerosite").withStyle(ChatFormatting.DARK_GRAY), false);
         return 1;
     }
 
     private static int showScore(CommandSourceStack source) {
         try {
             ServerPlayer player = source.getPlayerOrException();
-            FoodScoreManager manager = FoodScoreManager.get(player.server);
+            ZombieScoreManager manager = ZombieScoreManager.get(player.server);
             long playerScore = manager.getPlayerScore(player.getUUID());
             long globalScore = manager.getGlobalScore();
             long goal = manager.getGoal();
             float progress = goal > 0 ? Math.min((float) globalScore / goal * 100f, 100f) : 100f;
 
             source.sendSuccess(() -> Component.literal(""), false);
-            source.sendSuccess(() -> Component.literal("  === ReCraft Collect ===").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+            source.sendSuccess(() -> Component.literal("  === Purger le monde ===").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
             source.sendSuccess(() -> Component.literal("  Votre score: ").withStyle(ChatFormatting.YELLOW)
-                    .append(Component.literal(NF.format(playerScore) + " unites").withStyle(ChatFormatting.WHITE)), false);
+                    .append(Component.literal(NF.format(playerScore) + " pts").withStyle(ChatFormatting.WHITE)), false);
             source.sendSuccess(() -> Component.literal("  Score global: ").withStyle(ChatFormatting.GREEN)
                     .append(Component.literal(NF.format(globalScore) + " / " + NF.format(goal)).withStyle(ChatFormatting.WHITE)), false);
             source.sendSuccess(() -> Component.literal("  Progression: ").withStyle(ChatFormatting.AQUA)
@@ -211,14 +200,14 @@ public class FoodScoreCommand {
     }
 
     private static int showTop(CommandSourceStack source) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
         List<Map.Entry<UUID, Long>> top = manager.getTopScores(10);
 
         source.sendSuccess(() -> Component.literal(""), false);
-        source.sendSuccess(() -> Component.literal("  === Classement ReCraft Collect ===").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        source.sendSuccess(() -> Component.literal("  === Classement Purger le monde ===").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
 
         if (top.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("  Aucun score pour le moment.").withStyle(ChatFormatting.GRAY), false);
+            source.sendSuccess(() -> Component.literal("  Aucun kill pour le moment.").withStyle(ChatFormatting.GRAY), false);
         } else {
             for (int i = 0; i < top.size(); i++) {
                 Map.Entry<UUID, Long> entry = top.get(i);
@@ -237,7 +226,7 @@ public class FoodScoreCommand {
                 String scoreStr = NF.format(entry.getValue());
                 source.sendSuccess(() -> Component.literal("  " + rank + ". ").withStyle(rankColor, ChatFormatting.BOLD)
                         .append(Component.literal(playerName).withStyle(ChatFormatting.WHITE))
-                        .append(Component.literal(" - " + scoreStr + " unites").withStyle(ChatFormatting.YELLOW)), false);
+                        .append(Component.literal(" - " + scoreStr + " pts").withStyle(ChatFormatting.YELLOW)), false);
             }
         }
 
@@ -251,71 +240,10 @@ public class FoodScoreCommand {
         return 1;
     }
 
-    private static int depositHeld(CommandSourceStack source) {
-        try {
-            ServerPlayer player = source.getPlayerOrException();
-            FoodScoreManager manager = FoodScoreManager.get(player.server);
-            Map<String, Integer> overrides = manager.getItemValueOverrides();
-            ItemStack held = player.getMainHandItem();
-
-            if (!FoodUnitCalculator.isDepositable(held, overrides)) {
-                source.sendFailure(Component.literal("Vous devez tenir de la nourriture en main !"));
-                return 0;
-            }
-
-            long units = FoodUnitCalculator.getFoodUnits(held, overrides);
-            held.setCount(0);
-            manager.addScore(player.getUUID(), units);
-            ReCraftCollect.updateBossBar(player.server);
-            ReCraftCollect.checkMilestones(player.server);
-            ReCraftCollect.refreshLeaderboard(player.server);
-
-            source.sendSuccess(() -> Component.literal("+" + NF.format(units) + " unites deposees !")
-                    .withStyle(ChatFormatting.GREEN), false);
-        } catch (Exception e) {
-            source.sendFailure(Component.literal("Cette commande necessite un joueur."));
-        }
-        return 1;
-    }
-
-    private static int depositAll(CommandSourceStack source) {
-        try {
-            ServerPlayer player = source.getPlayerOrException();
-            FoodScoreManager manager = FoodScoreManager.get(player.server);
-            Map<String, Integer> overrides = manager.getItemValueOverrides();
-            long totalUnits = 0;
-
-            for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
-                ItemStack stack = player.getInventory().getItem(i);
-                if (!stack.isEmpty() && FoodUnitCalculator.isDepositable(stack, overrides)) {
-                    totalUnits += FoodUnitCalculator.getFoodUnits(stack, overrides);
-                    player.getInventory().setItem(i, ItemStack.EMPTY);
-                }
-            }
-
-            if (totalUnits == 0) {
-                source.sendFailure(Component.literal("Aucune nourriture dans votre inventaire !"));
-                return 0;
-            }
-
-            manager.addScore(player.getUUID(), totalUnits);
-            ReCraftCollect.updateBossBar(player.server);
-            ReCraftCollect.checkMilestones(player.server);
-            ReCraftCollect.refreshLeaderboard(player.server);
-
-            long finalUnits = totalUnits;
-            source.sendSuccess(() -> Component.literal("+" + NF.format(finalUnits) + " unites deposees !")
-                    .withStyle(ChatFormatting.GREEN), false);
-        } catch (Exception e) {
-            source.sendFailure(Component.literal("Cette commande necessite un joueur."));
-        }
-        return 1;
-    }
-
     private static int toggleBossBar(CommandSourceStack source) {
         try {
             ServerPlayer player = source.getPlayerOrException();
-            FoodScoreManager manager = FoodScoreManager.get(player.server);
+            ZombieScoreManager manager = ZombieScoreManager.get(player.server);
             boolean nowHidden = manager.toggleBossBar(player.getUUID());
 
             if (ReCraftCollect.getBossBar() != null) {
@@ -337,23 +265,23 @@ public class FoodScoreCommand {
     // ═══════════════════════════════════════════════════════════
 
     private static int givePoints(CommandSourceStack source, ServerPlayer target, long amount) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
         manager.addScore(target.getUUID(), amount);
         ReCraftCollect.updateBossBar(source.getServer());
         ReCraftCollect.checkMilestones(source.getServer());
         ReCraftCollect.refreshLeaderboard(source.getServer());
 
         String targetName = target.getGameProfile().getName();
-        source.sendSuccess(() -> Component.literal("+" + NF.format(amount) + " unites donnees a " + targetName)
+        source.sendSuccess(() -> Component.literal("+" + NF.format(amount) + " pts donnes a " + targetName)
                 .withStyle(ChatFormatting.GREEN), true);
-        target.sendSystemMessage(Component.literal("[ReCraft Collect] ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
-                .append(Component.literal("Un administrateur vous a attribue " + NF.format(amount) + " unites !")
+        target.sendSystemMessage(Component.literal("[Purger le monde] ").withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
+                .append(Component.literal("Un administrateur vous a attribue " + NF.format(amount) + " pts !")
                         .withStyle(ChatFormatting.GREEN)));
         return 1;
     }
 
     private static int takePoints(CommandSourceStack source, ServerPlayer target, long amount) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
         long current = manager.getPlayerScore(target.getUUID());
         long actualRemoved = Math.min(amount, current);
 
@@ -364,12 +292,13 @@ public class FoodScoreCommand {
 
         manager.removeScore(target.getUUID(), actualRemoved);
         ReCraftCollect.updateBossBar(source.getServer());
+        ReCraftCollect.refreshLeaderboard(source.getServer());
 
         String targetName = target.getGameProfile().getName();
-        source.sendSuccess(() -> Component.literal("-" + NF.format(actualRemoved) + " unites retirees a " + targetName)
+        source.sendSuccess(() -> Component.literal("-" + NF.format(actualRemoved) + " pts retires a " + targetName)
                 .withStyle(ChatFormatting.RED), true);
-        target.sendSystemMessage(Component.literal("[ReCraft Collect] ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
-                .append(Component.literal("Un administrateur vous a retire " + NF.format(actualRemoved) + " unites.")
+        target.sendSystemMessage(Component.literal("[Purger le monde] ").withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
+                .append(Component.literal("Un administrateur vous a retire " + NF.format(actualRemoved) + " pts.")
                         .withStyle(ChatFormatting.RED)));
         return 1;
     }
@@ -379,16 +308,17 @@ public class FoodScoreCommand {
     // ═══════════════════════════════════════════════════════════
 
     private static int setGoal(CommandSourceStack source, long amount) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
         manager.setGoal(amount);
         ReCraftCollect.updateBossBar(source.getServer());
-        source.sendSuccess(() -> Component.literal("Objectif modifie: " + NF.format(amount) + " unites")
+        ReCraftCollect.refreshLeaderboard(source.getServer());
+        source.sendSuccess(() -> Component.literal("Objectif modifie: " + NF.format(amount) + " pts")
                 .withStyle(ChatFormatting.GREEN), true);
         return 1;
     }
 
     // ═══════════════════════════════════════════════════════════
-    //  ADMIN: MILESTONES (config file based)
+    //  ADMIN: MILESTONES
     // ═══════════════════════════════════════════════════════════
 
     private static int addMilestone(CommandSourceStack source, long threshold, String message) {
@@ -402,8 +332,7 @@ public class FoodScoreCommand {
 
     private static int removeMilestone(CommandSourceStack source, long threshold) {
         if (MilestoneConfig.removeMilestone(threshold)) {
-            // Also clear reached status
-            FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+            ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
             manager.clearMilestoneReached(threshold);
             source.sendSuccess(() -> Component.literal("Palier " + NF.format(threshold) + " supprime.")
                     .withStyle(ChatFormatting.YELLOW), true);
@@ -415,7 +344,7 @@ public class FoodScoreCommand {
 
     private static int addMilestoneCmd(CommandSourceStack source, long threshold, String command) {
         if (MilestoneConfig.getMilestone(threshold) == null) {
-            source.sendFailure(Component.literal("Aucun palier a " + NF.format(threshold) + ". Creez-le d'abord avec /fc milestone add."));
+            source.sendFailure(Component.literal("Aucun palier a " + NF.format(threshold) + ". Creez-le d'abord avec /zk milestone add."));
             return 0;
         }
         MilestoneConfig.addCommand(threshold, command);
@@ -448,10 +377,10 @@ public class FoodScoreCommand {
     }
 
     private static int listMilestones(CommandSourceStack source) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
         List<MilestoneConfig.MilestoneEntry> entries = MilestoneConfig.getMilestones();
 
-        source.sendSuccess(() -> Component.literal("=== Paliers ReCraft Collect ===").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        source.sendSuccess(() -> Component.literal("=== Paliers Purger le monde ===").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
         source.sendSuccess(() -> Component.literal("Fichier: config/recraftcollect-milestones.json").withStyle(ChatFormatting.DARK_GRAY), false);
         source.sendSuccess(() -> Component.literal(""), false);
 
@@ -466,7 +395,6 @@ public class FoodScoreCommand {
                         .withStyle(reached ? ChatFormatting.GREEN : ChatFormatting.WHITE)
                         .append(Component.literal(" - " + entry.message).withStyle(ChatFormatting.GRAY)), false);
 
-                // Show commands
                 if (!entry.commands.isEmpty()) {
                     for (int i = 0; i < entry.commands.size(); i++) {
                         int idx = i;
@@ -484,13 +412,13 @@ public class FoodScoreCommand {
     private static int reloadMilestones(CommandSourceStack source) {
         MilestoneConfig.load();
         int count = MilestoneConfig.getMilestones().size();
-        source.sendSuccess(() -> Component.literal("Config paliers rechargee: " + count + " palier(s) charges.")
+        source.sendSuccess(() -> Component.literal("Config paliers rechargee: " + count + " palier(s).")
                 .withStyle(ChatFormatting.GREEN), true);
         return 1;
     }
 
     private static int resetMilestonesReached(CommandSourceStack source) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
         manager.resetAllMilestonesReached();
         source.sendSuccess(() -> Component.literal("Statut des paliers atteints reinitialise. Ils pourront se redeclencher.")
                 .withStyle(ChatFormatting.GREEN), true);
@@ -511,7 +439,7 @@ public class FoodScoreCommand {
             }
 
             BlockPos pos = ((BlockHitResult) hit).getBlockPos().above();
-            FoodScoreManager manager = FoodScoreManager.get(player.server);
+            ZombieScoreManager manager = ZombieScoreManager.get(player.server);
             manager.setLeaderboardPos(pos, player.level().dimension());
 
             LeaderboardDisplay.createOrUpdate(player.server, pos, player.level().dimension());
@@ -526,7 +454,7 @@ public class FoodScoreCommand {
     }
 
     private static int removeLeaderboard(CommandSourceStack source) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
         LeaderboardDisplay.removeFromServer(source.getServer());
         manager.removeLeaderboardPos();
         source.sendSuccess(() -> Component.literal("Leaderboard supprime.").withStyle(ChatFormatting.YELLOW), true);
@@ -534,10 +462,10 @@ public class FoodScoreCommand {
     }
 
     private static int refreshLeaderboard(CommandSourceStack source) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
         BlockPos pos = manager.getLeaderboardPos();
         if (pos == null) {
-            source.sendFailure(Component.literal("Aucun leaderboard defini. Utilisez /fc leaderboard set."));
+            source.sendFailure(Component.literal("Aucun leaderboard defini. Utilisez /zk leaderboard set."));
             return 0;
         }
         LeaderboardDisplay.createOrUpdate(source.getServer(), pos, manager.getLeaderboardDimension());
@@ -546,104 +474,67 @@ public class FoodScoreCommand {
     }
 
     // ═══════════════════════════════════════════════════════════
-    //  ADMIN: ITEM VALUES
+    //  ADMIN: ZOMBIE VALUES
     // ═══════════════════════════════════════════════════════════
 
-    private static int setItemValue(CommandSourceStack source, int value) {
-        try {
-            ServerPlayer player = source.getPlayerOrException();
-            ItemStack held = player.getMainHandItem();
-            if (held.isEmpty()) {
-                source.sendFailure(Component.literal("Vous devez tenir un objet en main !"));
-                return 0;
-            }
-
-            String itemId = ForgeRegistries.ITEMS.getKey(held.getItem()).toString();
-            FoodScoreManager manager = FoodScoreManager.get(player.server);
-            manager.setItemValue(itemId, value);
-
-            String itemName = held.getHoverName().getString();
-            source.sendSuccess(() -> Component.literal("Valeur de " + itemName + " (" + itemId + ") = " + value + " unites")
-                    .withStyle(ChatFormatting.GREEN), true);
-        } catch (Exception e) {
-            source.sendFailure(Component.literal("Cette commande necessite un joueur."));
-        }
+    private static int setZombieValue(CommandSourceStack source, String entityId, int points) {
+        ZombieValueConfig.setValue(entityId, points);
+        source.sendSuccess(() -> Component.literal("Valeur de " + entityId + " = " + points + " pts")
+                .withStyle(ChatFormatting.GREEN), true);
         return 1;
     }
 
-    private static int removeItemValue(CommandSourceStack source) {
-        try {
-            ServerPlayer player = source.getPlayerOrException();
-            ItemStack held = player.getMainHandItem();
-            if (held.isEmpty()) {
-                source.sendFailure(Component.literal("Vous devez tenir un objet en main !"));
-                return 0;
-            }
-
-            String itemId = ForgeRegistries.ITEMS.getKey(held.getItem()).toString();
-            FoodScoreManager manager = FoodScoreManager.get(player.server);
-
-            if (manager.removeItemValue(itemId)) {
-                String itemName = held.getHoverName().getString();
-                source.sendSuccess(() -> Component.literal("Valeur personnalisee de " + itemName + " supprimee.")
-                        .withStyle(ChatFormatting.YELLOW), true);
-            } else {
-                source.sendFailure(Component.literal("Cet objet n'a pas de valeur personnalisee."));
-            }
-        } catch (Exception e) {
-            source.sendFailure(Component.literal("Cette commande necessite un joueur."));
-        }
-        return 1;
-    }
-
-    private static int listItemValues(CommandSourceStack source) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
-        Map<String, Integer> overrides = manager.getItemValueOverrides();
-
-        source.sendSuccess(() -> Component.literal("=== Valeurs personnalisees ===").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
-
-        if (overrides.isEmpty()) {
-            source.sendSuccess(() -> Component.literal("  Aucune valeur personnalisee.").withStyle(ChatFormatting.GRAY), false);
+    private static int removeZombieValue(CommandSourceStack source, String entityId) {
+        if (ZombieValueConfig.removeValue(entityId)) {
+            source.sendSuccess(() -> Component.literal("Entree " + entityId + " supprimee.")
+                    .withStyle(ChatFormatting.YELLOW), true);
         } else {
-            for (Map.Entry<String, Integer> entry : overrides.entrySet()) {
-                String itemId = entry.getKey();
-                int val = entry.getValue();
-                source.sendSuccess(() -> Component.literal("  " + itemId).withStyle(ChatFormatting.WHITE)
-                        .append(Component.literal(" = " + val + " unites").withStyle(ChatFormatting.YELLOW)), false);
-            }
+            source.sendFailure(Component.literal("Aucune entree pour " + entityId + "."));
         }
         return 1;
     }
 
-    // ═══════════════════════════════════════════════════════════
-    //  ADMIN: COLLECTION POINT / BOSS BAR ZONE
-    // ═══════════════════════════════════════════════════════════
+    private static int listZombieValues(CommandSourceStack source) {
+        Map<String, Integer> all = ZombieValueConfig.getAll();
 
-    private static int setPoint(CommandSourceStack source) {
-        try {
-            ServerPlayer player = source.getPlayerOrException();
-            HitResult hit = player.pick(5.0, 0.0f, false);
-            if (hit.getType() != HitResult.Type.BLOCK) {
-                source.sendFailure(Component.literal("Regardez un bloc pour definir le point de collecte !"));
-                return 0;
-            }
-            BlockPos pos = ((BlockHitResult) hit).getBlockPos();
-            FoodScoreManager manager = FoodScoreManager.get(player.server);
-            manager.setCollectionPoint(pos, player.level().dimension());
-            source.sendSuccess(() -> Component.literal("Point de collecte defini en [" +
-                            pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "]")
-                    .withStyle(ChatFormatting.GREEN), true);
-        } catch (Exception e) {
-            source.sendFailure(Component.literal("Cette commande necessite un joueur."));
+        source.sendSuccess(() -> Component.literal("=== Valeurs des zombies (" + all.size() + ") ===").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
+        source.sendSuccess(() -> Component.literal("Fichier: config/recraftcollect-zombievalues.json").withStyle(ChatFormatting.DARK_GRAY), false);
+
+        if (all.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("  Aucune valeur definie.").withStyle(ChatFormatting.GRAY), false);
+            return 1;
         }
+
+        // Group by point tier for readability
+        all.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue()
+                        .thenComparing(Map.Entry.comparingByKey()))
+                .forEach(entry -> {
+                    ChatFormatting color;
+                    int v = entry.getValue();
+                    if (v >= 2000) color = ChatFormatting.LIGHT_PURPLE;
+                    else if (v >= 100) color = ChatFormatting.GOLD;
+                    else if (v >= 50) color = ChatFormatting.RED;
+                    else if (v >= 15) color = ChatFormatting.YELLOW;
+                    else color = ChatFormatting.GREEN;
+
+                    source.sendSuccess(() -> Component.literal("  " + entry.getKey()).withStyle(ChatFormatting.WHITE)
+                            .append(Component.literal(" = " + v + " pts").withStyle(color)), false);
+                });
         return 1;
     }
 
-    private static int removePoint(CommandSourceStack source) {
-        FoodScoreManager.get(source.getServer()).removeCollectionPoint();
-        source.sendSuccess(() -> Component.literal("Point de collecte supprime.").withStyle(ChatFormatting.YELLOW), true);
+    private static int reloadZombieValues(CommandSourceStack source) {
+        ZombieValueConfig.load();
+        int count = ZombieValueConfig.getAll().size();
+        source.sendSuccess(() -> Component.literal("Config valeurs rechargee: " + count + " entree(s).")
+                .withStyle(ChatFormatting.GREEN), true);
         return 1;
     }
+
+    // ═══════════════════════════════════════════════════════════
+    //  ADMIN: BOSS BAR ZONE
+    // ═══════════════════════════════════════════════════════════
 
     private static int setCenter(CommandSourceStack source, int radius) {
         try {
@@ -654,7 +545,7 @@ public class FoodScoreCommand {
                 return 0;
             }
             BlockPos pos = ((BlockHitResult) hit).getBlockPos();
-            FoodScoreManager.get(player.server).setBossBarZone(pos, player.level().dimension(), radius);
+            ZombieScoreManager.get(player.server).setBossBarZone(pos, player.level().dimension(), radius);
             source.sendSuccess(() -> Component.literal("Zone boss bar: [" +
                             pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "] rayon " + radius)
                     .withStyle(ChatFormatting.GREEN), true);
@@ -665,7 +556,7 @@ public class FoodScoreCommand {
     }
 
     private static int removeCenter(CommandSourceStack source) {
-        FoodScoreManager.get(source.getServer()).removeBossBarZone();
+        ZombieScoreManager.get(source.getServer()).removeBossBarZone();
         source.sendSuccess(() -> Component.literal("Zone boss bar supprimee (visible partout).").withStyle(ChatFormatting.YELLOW), true);
         return 1;
     }
@@ -675,13 +566,13 @@ public class FoodScoreCommand {
     // ═══════════════════════════════════════════════════════════
 
     private static int resetScores(CommandSourceStack source) {
-        FoodScoreManager.get(source.getServer()).resetAllScores();
+        ZombieScoreManager.get(source.getServer()).resetAllScores();
         ReCraftCollect.updateBossBar(source.getServer());
         ReCraftCollect.refreshLeaderboard(source.getServer());
         source.sendSuccess(() -> Component.literal("Tous les scores ont ete reinitialises !")
                 .withStyle(ChatFormatting.RED, ChatFormatting.BOLD), true);
         for (ServerPlayer p : source.getServer().getPlayerList().getPlayers()) {
-            p.sendSystemMessage(Component.literal("[ReCraft Collect] ").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD)
+            p.sendSystemMessage(Component.literal("[Purger le monde] ").withStyle(ChatFormatting.RED, ChatFormatting.BOLD)
                     .append(Component.literal("Les scores ont ete reinitialises par un administrateur.")
                             .withStyle(ChatFormatting.RED)));
         }
@@ -689,23 +580,13 @@ public class FoodScoreCommand {
     }
 
     private static int showInfo(CommandSourceStack source) {
-        FoodScoreManager manager = FoodScoreManager.get(source.getServer());
+        ZombieScoreManager manager = ZombieScoreManager.get(source.getServer());
 
-        source.sendSuccess(() -> Component.literal("=== Info ReCraft Collect ===").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), false);
+        source.sendSuccess(() -> Component.literal("=== Info Purger le monde ===").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
 
         long goal = manager.getGoal();
         source.sendSuccess(() -> Component.literal("Objectif: ").withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal(NF.format(goal) + " unites").withStyle(ChatFormatting.WHITE)), false);
-
-        BlockPos pos = manager.getCollectionPoint();
-        if (pos == null) {
-            source.sendSuccess(() -> Component.literal("Point de collecte: ").withStyle(ChatFormatting.YELLOW)
-                    .append(Component.literal("non defini").withStyle(ChatFormatting.RED)), false);
-        } else {
-            source.sendSuccess(() -> Component.literal("Point de collecte: ").withStyle(ChatFormatting.YELLOW)
-                    .append(Component.literal("[" + pos.getX() + ", " + pos.getY() + ", " + pos.getZ() + "]")
-                            .withStyle(ChatFormatting.GREEN)), false);
-        }
+                .append(Component.literal(NF.format(goal) + " pts").withStyle(ChatFormatting.WHITE)), false);
 
         BlockPos center = manager.getBossBarCenter();
         if (center == null || manager.getBossBarRadius() <= 0) {
@@ -726,13 +607,12 @@ public class FoodScoreCommand {
 
         source.sendSuccess(() -> Component.literal("Joueurs: ").withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal(String.valueOf(manager.getTopScores(Integer.MAX_VALUE).size())).withStyle(ChatFormatting.WHITE)), false);
-        source.sendSuccess(() -> Component.literal("Valeurs custom: ").withStyle(ChatFormatting.YELLOW)
-                .append(Component.literal(manager.getItemValueOverrides().size() + " items").withStyle(ChatFormatting.WHITE)), false);
+        source.sendSuccess(() -> Component.literal("Valeurs zombies: ").withStyle(ChatFormatting.YELLOW)
+                .append(Component.literal(ZombieValueConfig.getAll().size() + " entrees").withStyle(ChatFormatting.WHITE)), false);
         source.sendSuccess(() -> Component.literal("Paliers: ").withStyle(ChatFormatting.YELLOW)
                 .append(Component.literal(MilestoneConfig.getMilestones().size() + " (config/recraftcollect-milestones.json)")
                         .withStyle(ChatFormatting.WHITE)), false);
 
-        // Leaderboard
         BlockPos lbPos = manager.getLeaderboardPos();
         if (lbPos == null) {
             source.sendSuccess(() -> Component.literal("Leaderboard: ").withStyle(ChatFormatting.YELLOW)

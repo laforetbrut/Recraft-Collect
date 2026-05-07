@@ -1,6 +1,6 @@
 package com.vyrriox.recraftcollect.leaderboard;
 
-import com.vyrriox.recraftcollect.data.FoodScoreManager;
+import com.vyrriox.recraftcollect.data.ZombieScoreManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -34,7 +34,7 @@ public class LeaderboardDisplay {
         // Remove existing leaderboard
         removeAll(level);
 
-        FoodScoreManager manager = FoodScoreManager.get(server);
+        ZombieScoreManager manager = ZombieScoreManager.get(server);
         List<Map.Entry<UUID, Long>> top = manager.getTopScores(10);
 
         double baseX = pos.getX() + 0.5;
@@ -44,8 +44,8 @@ public class LeaderboardDisplay {
         int lineIndex = 0;
 
         // Title line
-        Component title = Component.literal("== ReCraft Collect ==")
-                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+        Component title = Component.literal("== Purger le monde ==")
+                .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD);
         spawnLine(level, baseX, baseY - lineIndex * LINE_HEIGHT, baseZ, title);
         lineIndex++;
 
@@ -82,7 +82,7 @@ public class LeaderboardDisplay {
                 Component line = Component.literal("#" + rank + " ")
                         .withStyle(rankColor, ChatFormatting.BOLD)
                         .append(Component.literal(playerName).withStyle(ChatFormatting.WHITE))
-                        .append(Component.literal(" - " + scoreStr).withStyle(ChatFormatting.YELLOW));
+                        .append(Component.literal(" - " + scoreStr + " pts").withStyle(ChatFormatting.YELLOW));
 
                 spawnLine(level, baseX, baseY - lineIndex * LINE_HEIGHT, baseZ, line);
                 lineIndex++;

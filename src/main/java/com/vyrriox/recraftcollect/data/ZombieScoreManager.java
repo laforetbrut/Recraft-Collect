@@ -10,14 +10,18 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.*;
 
-public class FoodScoreManager extends SavedData {
+/**
+ * Persistent storage for zombie purge scores, goal, milestones reached,
+ * boss bar zone, and leaderboard position. Survives world reloads.
+ *
+ * Save name kept as recraftcollect_scores for v1.x save compatibility.
+ */
+public class ZombieScoreManager extends SavedData {
 
     private static final String DATA_NAME = "recraftcollect_scores";
     public static final long DEFAULT_GOAL = 1_000_000L;
@@ -28,10 +32,6 @@ public class FoodScoreManager extends SavedData {
 
     // ─── Goal ──────────────────────────────────────────────────
     private long goal = DEFAULT_GOAL;
-
-    // ─── Collection Point ──────────────────────────────────────
-    private BlockPos collectionPoint = null;
-    private ResourceKey<Level> collectionDimension = null;
 
     // ─── Boss Bar Zone ─────────────────────────────────────────
     private BlockPos bossBarCenter = null;
@@ -44,27 +44,23 @@ public class FoodScoreManager extends SavedData {
     // ─── Milestones reached (definitions are in MilestoneConfig)
     private final Set<Long> milestonesReached = new HashSet<>();
 
-    // ─── Item Value Overrides (registry name → value) ──────────
-    private final Map<String, Integer> itemValueOverrides = new HashMap<>();
-
     // ─── Leaderboard Display Position ──────────────────────────
     private BlockPos leaderboardPos = null;
     private ResourceKey<Level> leaderboardDimension = null;
 
-    public FoodScoreManager() {
+    public ZombieScoreManager() {
     }
 
     // ─── Load / Save ───────────────────────────────────────────
 
-    public static FoodScoreManager load(CompoundTag tag) {
-        FoodScoreManager manager = new FoodScoreManager();
+    public static ZombieScoreManager load(CompoundTag tag) {
+        ZombieScoreManager manager = new ZombieScoreManager();
         manager.globalScore = tag.getLong("GlobalScore");
 
         if (tag.contains("Goal")) {
             manager.goal = tag.getLong("Goal");
         }
 
-        // Player scores
         ListTag playerList = tag.getList("Players", Tag.TAG_COMPOUND);
         for (int i = 0; i < playerList.size(); i++) {
             CompoundTag playerTag = playerList.getCompound(i);
@@ -73,17 +69,6 @@ public class FoodScoreManager extends SavedData {
             manager.playerScores.put(uuid, score);
         }
 
-        // Collection point
-        if (tag.contains("CollectX")) {
-            manager.collectionPoint = new BlockPos(
-                    tag.getInt("CollectX"), tag.getInt("CollectY"), tag.getInt("CollectZ"));
-            if (tag.contains("CollectDim")) {
-                manager.collectionDimension = ResourceKey.create(
-                        Registries.DIMENSION, new ResourceLocation(tag.getString("CollectDim")));
-            }
-        }
-
-        // Boss bar zone
         if (tag.contains("BarCenterX")) {
             manager.bossBarCenter = new BlockPos(
                     tag.getInt("BarCenterX"), tag.getInt("BarCenterY"), tag.getInt("BarCenterZ"));
@@ -94,13 +79,11 @@ public class FoodScoreManager extends SavedData {
             }
         }
 
-        // Boss bar hidden players
         ListTag hiddenList = tag.getList("BossBarHidden", Tag.TAG_COMPOUND);
         for (int i = 0; i < hiddenList.size(); i++) {
             manager.bossBarHidden.add(hiddenList.getCompound(i).getUUID("UUID"));
         }
 
-        // Milestones reached (try new key, fallback to old keys)
         ListTag reachedList = tag.getList("MilestonesReached", Tag.TAG_COMPOUND);
         if (reachedList.isEmpty()) {
             reachedList = tag.getList("Milestones", Tag.TAG_COMPOUND);
@@ -109,14 +92,6 @@ public class FoodScoreManager extends SavedData {
             manager.milestonesReached.add(reachedList.getCompound(i).getLong("Value"));
         }
 
-        // Item value overrides
-        ListTag overrideList = tag.getList("ItemOverrides", Tag.TAG_COMPOUND);
-        for (int i = 0; i < overrideList.size(); i++) {
-            CompoundTag ot = overrideList.getCompound(i);
-            manager.itemValueOverrides.put(ot.getString("Item"), ot.getInt("Value"));
-        }
-
-        // Leaderboard position
         if (tag.contains("LeaderX")) {
             manager.leaderboardPos = new BlockPos(
                     tag.getInt("LeaderX"), tag.getInt("LeaderY"), tag.getInt("LeaderZ"));
@@ -134,7 +109,6 @@ public class FoodScoreManager extends SavedData {
         tag.putLong("GlobalScore", globalScore);
         tag.putLong("Goal", goal);
 
-        // Player scores
         ListTag playerList = new ListTag();
         for (Map.Entry<UUID, Long> entry : playerScores.entrySet()) {
             CompoundTag playerTag = new CompoundTag();
@@ -144,17 +118,6 @@ public class FoodScoreManager extends SavedData {
         }
         tag.put("Players", playerList);
 
-        // Collection point
-        if (collectionPoint != null) {
-            tag.putInt("CollectX", collectionPoint.getX());
-            tag.putInt("CollectY", collectionPoint.getY());
-            tag.putInt("CollectZ", collectionPoint.getZ());
-            if (collectionDimension != null) {
-                tag.putString("CollectDim", collectionDimension.location().toString());
-            }
-        }
-
-        // Boss bar zone
         if (bossBarCenter != null) {
             tag.putInt("BarCenterX", bossBarCenter.getX());
             tag.putInt("BarCenterY", bossBarCenter.getY());
@@ -165,7 +128,6 @@ public class FoodScoreManager extends SavedData {
             }
         }
 
-        // Boss bar hidden
         ListTag hiddenList = new ListTag();
         for (UUID uuid : bossBarHidden) {
             CompoundTag ht = new CompoundTag();
@@ -174,7 +136,6 @@ public class FoodScoreManager extends SavedData {
         }
         tag.put("BossBarHidden", hiddenList);
 
-        // Milestones reached
         ListTag reachedList = new ListTag();
         for (long milestone : milestonesReached) {
             CompoundTag mt = new CompoundTag();
@@ -183,17 +144,6 @@ public class FoodScoreManager extends SavedData {
         }
         tag.put("MilestonesReached", reachedList);
 
-        // Item value overrides
-        ListTag overrideList = new ListTag();
-        for (Map.Entry<String, Integer> entry : itemValueOverrides.entrySet()) {
-            CompoundTag ot = new CompoundTag();
-            ot.putString("Item", entry.getKey());
-            ot.putInt("Value", entry.getValue());
-            overrideList.add(ot);
-        }
-        tag.put("ItemOverrides", overrideList);
-
-        // Leaderboard position
         if (leaderboardPos != null) {
             tag.putInt("LeaderX", leaderboardPos.getX());
             tag.putInt("LeaderY", leaderboardPos.getY());
@@ -208,9 +158,7 @@ public class FoodScoreManager extends SavedData {
 
     // ─── Goal ──────────────────────────────────────────────────
 
-    public long getGoal() {
-        return goal;
-    }
+    public long getGoal() { return goal; }
 
     public void setGoal(long goal) {
         this.goal = goal;
@@ -219,15 +167,15 @@ public class FoodScoreManager extends SavedData {
 
     // ─── Scores ────────────────────────────────────────────────
 
-    public void addScore(UUID playerId, long units) {
-        playerScores.merge(playerId, units, Long::sum);
-        globalScore += units;
+    public void addScore(UUID playerId, long points) {
+        playerScores.merge(playerId, points, Long::sum);
+        globalScore += points;
         setDirty();
     }
 
-    public void removeScore(UUID playerId, long units) {
+    public void removeScore(UUID playerId, long points) {
         long current = playerScores.getOrDefault(playerId, 0L);
-        long toRemove = Math.min(units, current);
+        long toRemove = Math.min(points, current);
         if (toRemove <= 0) return;
         playerScores.put(playerId, current - toRemove);
         globalScore = Math.max(0, globalScore - toRemove);
@@ -238,9 +186,7 @@ public class FoodScoreManager extends SavedData {
         return playerScores.getOrDefault(playerId, 0L);
     }
 
-    public long getGlobalScore() {
-        return globalScore;
-    }
+    public long getGlobalScore() { return globalScore; }
 
     public List<Map.Entry<UUID, Long>> getTopScores(int limit) {
         return playerScores.entrySet().stream()
@@ -256,7 +202,7 @@ public class FoodScoreManager extends SavedData {
         setDirty();
     }
 
-    // ─── Milestones (definitions in MilestoneConfig, tracking here)
+    // ─── Milestones ────────────────────────────────────────────
 
     public List<Long> checkAndMarkMilestones() {
         List<Long> newMilestones = new ArrayList<>();
@@ -266,9 +212,7 @@ public class FoodScoreManager extends SavedData {
                 newMilestones.add(entry.threshold);
             }
         }
-        if (!newMilestones.isEmpty()) {
-            setDirty();
-        }
+        if (!newMilestones.isEmpty()) setDirty();
         return newMilestones;
     }
 
@@ -283,46 +227,6 @@ public class FoodScoreManager extends SavedData {
 
     public void resetAllMilestonesReached() {
         milestonesReached.clear();
-        setDirty();
-    }
-
-    // ─── Item Value Overrides ──────────────────────────────────
-
-    public Map<String, Integer> getItemValueOverrides() {
-        return Collections.unmodifiableMap(itemValueOverrides);
-    }
-
-    public void setItemValue(String itemId, int value) {
-        itemValueOverrides.put(itemId, value);
-        setDirty();
-    }
-
-    public boolean removeItemValue(String itemId) {
-        boolean removed = itemValueOverrides.remove(itemId) != null;
-        if (removed) setDirty();
-        return removed;
-    }
-
-    public boolean hasItemOverride(ItemStack stack) {
-        if (stack.isEmpty()) return false;
-        String itemId = ForgeRegistries.ITEMS.getKey(stack.getItem()).toString();
-        return itemValueOverrides.containsKey(itemId);
-    }
-
-    // ─── Collection Point ──────────────────────────────────────
-
-    public BlockPos getCollectionPoint() { return collectionPoint; }
-    public ResourceKey<Level> getCollectionDimension() { return collectionDimension; }
-
-    public void setCollectionPoint(BlockPos pos, ResourceKey<Level> dimension) {
-        this.collectionPoint = pos;
-        this.collectionDimension = dimension;
-        setDirty();
-    }
-
-    public void removeCollectionPoint() {
-        this.collectionPoint = null;
-        this.collectionDimension = null;
         setDirty();
     }
 
@@ -384,11 +288,11 @@ public class FoodScoreManager extends SavedData {
 
     // ─── Access ────────────────────────────────────────────────
 
-    public static FoodScoreManager get(MinecraftServer server) {
+    public static ZombieScoreManager get(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
         return overworld.getDataStorage().computeIfAbsent(
-                FoodScoreManager::load,
-                FoodScoreManager::new,
+                ZombieScoreManager::load,
+                ZombieScoreManager::new,
                 DATA_NAME
         );
     }

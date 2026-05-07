@@ -11,3 +11,8 @@ run/
 bin/
 out/
 logs/
+
+# Claude Code
+.claude/
+CLAUDE.md
+ERROR_LOG.md

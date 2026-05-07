@@ -1,160 +1,187 @@
-# ReCraft Collect
+# ReCraft Collect — Zombie Purge
 
-![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red) ![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-red) ![Version](https://img.shields.io/badge/version-2.0.0-blue) ![Forge](https://img.shields.io/badge/Forge-1.20.1--47.2.0-orange)
 
-**[EN]** Server-side community food collection mod for Minecraft Forge 1.20.1.
-**[FR]** Mod de collecte communautaire de nourriture server-side pour Minecraft Forge 1.20.1.
+**[EN]** Server-side community zombie-kill scoring mod for Minecraft Forge 1.20.1.
+**[FR]** Mod server-side de comptage communautaire de kills de zombies pour Minecraft Forge 1.20.1.
 
 ---
 
-## 🇺🇸 English (US)
+## Features
 
-### Features
-- **Community Collection**: Players deposit food at a shared collection point at spawn.
-- **Dynamic Boss Bar**: Real-time progress bar with color changes at milestones (White → Blue → Yellow → Green).
-- **Leaderboards**: Track top contributors with `/fc top`.
-- **Configurable Milestones**: Set thresholds with custom messages and automatic server commands.
-- **Custom Item Values**: Override food values or make non-food items depositable.
-- **100% Server-Side**: Players don't need to install anything on their client.
+- **Tiered zombie kill scoring** — Vanilla and modded zombies grant 1, 15, 50, 100 or 2000 points based on tier.
+- **"Purger le monde" boss bar** — Real-time global progress bar with dynamic color (Red → Purple → Yellow → Green) toward 1,000,000 points.
+- **In-game armor-stand leaderboard** — Visual top-10 placed in the world.
+- **Configurable milestones** — JSON-defined thresholds with custom messages and per-milestone server commands.
+- **Direct-kill enforcement** — Only the player who lands the killing blow earns points. No pet farming, no environment kills.
+- **Hot-reloadable point config** — `config/recraftcollect-zombievalues.json` supports per-entity values and `modid:*` wildcards.
+- **100% server-side** — Players don't need to install anything on their client.
 
-### How It Works
+## How It Works
 
-An admin designates an existing block as the collection point. Players interact with it:
+When a player kills a zombie (vanilla or from a supported mod), the mod looks up the entity's registry id in `recraftcollect-zombievalues.json` and awards the matching points to the killer. Resolution order: exact id → `modid:*` wildcard → 0 (not counted). The community works together to reach the season's goal (default: 1,000,000 points).
 
-| Action | Effect |
-|--------|--------|
-| **Right-click** with food in hand | Deposits the held stack |
-| **Sneak + Right-click** | Deposits **all** food from inventory |
-| **Right-click** empty-handed | Shows personal and global score |
+### Point Tiers
 
-Each food item is converted to units based on its **nutritive value** (hunger points restored) × quantity. The community works together to reach the season's goal (default: 1,000,000 units).
+| Tier | Points | Examples |
+|------|--------|----------|
+| Normal | **1** | Vanilla zombies, husks, drowned, zombie villagers, all Spawn Eggs zombies, all Apocalypse Now mobs, basic Zombie Extreme infected |
+| Superior 1 | **15** | Runner, Infected Police, The Bomber, The Wolf, The Wheezer, Sucker… |
+| Superior 2 | **50** | Boomer, Chainsaw, Clicker, Inflated, Spitter, Royal, Hunter, Rabidus… |
+| Superior 3 | **100** | Juggernaut, Ram, Night Hunter, Faceless, Pregnant, Lechery, Posessive… |
+| Boss | **2000** | The Heavy, Demolisher, Rat King, Zero Patient, The Clogger, The Lurker |
 
-### Unit Examples
+The full default mapping ships in `config/recraftcollect-zombievalues.json`. Modify it in-game with `/zk setvalue <entity_id> <points>` or edit the file directly and reload with `/zk reloadvalues`.
 
-| Food | Nutrition | 1 Stack (64) |
-|------|-----------|-------------|
-| Steak | 8 | 512 units |
-| Cooked Chicken | 6 | 384 units |
-| Bread | 5 | 320 units |
-| Apple | 4 | 256 units |
-| Golden Carrot | 6 | 384 units |
+### Anti-Farm
 
-### Commands
+- Pets / wolves / iron golems do not award points.
+- Environmental deaths (lava, fall, suffocation) do not award points.
+- Only `event.getSource().getEntity() instanceof ServerPlayer` triggers a payout.
 
-#### Player Commands
+## Installation
+
+1. Install **Minecraft Forge 1.20.1-47.2.0** on your server.
+2. Drop `recraftcollect-2.0.0.jar` in the `mods/` folder.
+3. Start the server. `config/recraftcollect-milestones.json` and `config/recraftcollect-zombievalues.json` are generated automatically on first launch.
+4. *(Optional)* Adjust thresholds, messages, or per-mod entity ids in those JSON files. Reload in-game with `/zk milestone reload` and `/zk reloadvalues`.
+
+## Commands
+
+### Player Commands
 
 | Command | Description |
 |---------|-------------|
-| `/fc` | Display help |
-| `/fc score` | Show your personal score, global score and progress |
-| `/fc top` | Show top 10 contributors |
-| `/fc deposit` | Deposit food held in main hand |
-| `/fc depositall` | Deposit all food from inventory |
-| `/fc bossbar` | Toggle boss bar visibility (per player) |
+| `/zk` | Show help |
+| `/zk score` | Show your personal score, global score and progress |
+| `/zk top` | Show top-10 hunters |
+| `/zk bossbar` | Toggle boss bar visibility (per player) |
 
-#### Admin Commands *(OP 2+)*
+### Admin Commands *(OP 2+)*
 
 | Command | Description |
 |---------|-------------|
-| `/fc setpoint` | Set the looked-at block as collection point |
-| `/fc removepoint` | Remove the collection point |
-| `/fc setgoal <amount>` | Set the goal (e.g., `/fc setgoal 2000000`) |
-| `/fc give <player> <amount>` | Give points to a player |
-| `/fc take <player> <amount>` | Remove points from a player |
-| `/fc setvalue <value>` | Set custom value for held item (units per item) |
-| `/fc removevalue` | Remove custom value for held item |
-| `/fc listvalues` | List all custom item values |
-| `/fc setcenter <radius>` | Set boss bar visibility zone |
-| `/fc removecenter` | Remove boss bar zone (visible everywhere) |
-| `/fc milestone add <threshold> <message>` | Add or modify a milestone |
-| `/fc milestone remove <threshold>` | Remove a milestone |
-| `/fc milestone addcmd <threshold> <command>` | Add a server command to a milestone |
-| `/fc milestone removecmd <threshold> <index>` | Remove a command by index |
-| `/fc milestone list` | List all milestones |
-| `/fc milestone reload` | Reload milestones from config |
-| `/fc info` | Show detailed information |
-| `/fc reset confirm` | Reset all scores and milestones *(OP 3, irreversible)* |
+| `/zk setgoal <amount>` | Set the global goal (default 1,000,000) |
+| `/zk give <player> <amount>` | Award points to a player |
+| `/zk take <player> <amount>` | Remove points from a player |
+| `/zk setvalue <entity_id> <points>` | Set or update an entity's point value (e.g. `/zk setvalue minecraft:zombie 1`, `/zk setvalue zombieextreme:* 1`) |
+| `/zk removevalue <entity_id>` | Remove an entity entry from the config |
+| `/zk listvalues` | List all configured entity values, sorted by tier |
+| `/zk reloadvalues` | Reload `recraftcollect-zombievalues.json` from disk |
+| `/zk milestone add <threshold> <message>` | Add or update a milestone |
+| `/zk milestone remove <threshold>` | Remove a milestone |
+| `/zk milestone addcmd <threshold> <command>` | Add a server command triggered when the milestone is reached |
+| `/zk milestone removecmd <threshold> <index>` | Remove a milestone command by index |
+| `/zk milestone list` | List all milestones with their commands |
+| `/zk milestone reload` | Reload `recraftcollect-milestones.json` from disk |
+| `/zk milestone resetreached` | Mark all milestones as not-reached so they can re-trigger |
+| `/zk leaderboard set` | Place an armor-stand top-10 above the looked-at block |
+| `/zk leaderboard remove` | Remove the armor-stand leaderboard |
+| `/zk leaderboard refresh` | Force a leaderboard refresh |
+| `/zk leaderboard show` | Display the leaderboard in chat |
+| `/zk setcenter <radius>` | Restrict boss bar visibility to a radius around the looked-at block |
+| `/zk removecenter` | Make the boss bar visible everywhere |
+| `/zk info` | Show detailed mod info |
+| `/zk reset confirm` | **(OP 3, irreversible)** Reset every score and reached milestone |
+
+## Credits
+
+- **Author**: vyrriox
+- **License**: All Rights Reserved
+- **Forge**: [Minecraft Forge](https://files.minecraftforge.net/) 1.20.1-47.2.0
+- **Compatible with**: Zombie Extreme, Undead Revamp 2, Apocalypse Now, Spawn Eggs, and any zombie-adding mod (add the entity ids manually)
 
 ---
 
-## 🇫🇷 Français (FR)
+# ReCraft Collect — Zombie Purge (Version Française)
 
-### Fonctionnalités
-- **Collecte Communautaire** : Les joueurs déposent de la nourriture à un point de collecte au spawn.
-- **Boss Bar Dynamique** : Barre de progression en temps réel avec changements de couleur aux paliers (Blanc → Bleu → Jaune → Vert).
-- **Classements** : Suivez les meilleurs contributeurs avec `/fc top`.
-- **Paliers Configurables** : Définissez des seuils avec messages personnalisés et commandes serveur automatiques.
-- **Valeurs d'Items Personnalisées** : Modifiez les valeurs de nourriture ou rendez des items non-nourriture déposables.
-- **100% Server-Side** : Les joueurs n'ont rien à installer sur leur client.
+Mod server-side de comptage communautaire de kills de zombies pour Minecraft Forge 1.20.1. Tuez des zombies pour faire monter le compteur global "Purger le monde" jusqu'à 1 000 000 de points.
 
-### Fonctionnement
+## Caractéristiques
 
-Un administrateur désigne un bloc existant comme point de collecte. Les joueurs interagissent avec :
+- **Bareme par catégorie** — Les zombies vanilla et modded rapportent 1, 15, 50, 100 ou 2000 points selon leur dangerosité.
+- **Boss bar "Purger le monde"** — Barre de progression globale en temps réel avec couleur dynamique (Rouge → Violet → Jaune → Vert).
+- **Leaderboard armor-stand en jeu** — Top 10 visuel placé dans le monde.
+- **Paliers configurables** — Seuils définis en JSON avec messages personnalisés et commandes serveur exécutées au franchissement.
+- **Kill direct uniquement** — Seul le joueur qui porte le coup fatal gagne les points. Pas de farm via pets ni via l'environnement.
+- **Config rechargeable à chaud** — `config/recraftcollect-zombievalues.json` supporte les valeurs par entité et les jokers `modid:*`.
+- **100% server-side** — Aucune installation côté client.
 
-| Action | Effet |
-|--------|-------|
-| **Clic droit** avec nourriture en main | Dépose le stack tenu |
-| **Sneak + Clic droit** | Dépose **toute** la nourriture de l'inventaire |
-| **Clic droit** main vide | Affiche le score personnel et global |
+## Fonctionnement
 
-Chaque aliment est converti en unités selon sa **valeur nutritive** (points de faim restaurés) × quantité. La communauté travaille ensemble pour atteindre l'objectif de la saison (défaut : 1 000 000 unités).
+Quand un joueur tue un zombie (vanilla ou d'un mod supporté), le mod cherche l'identifiant de l'entité dans `recraftcollect-zombievalues.json` et attribue les points correspondants au tueur. Ordre de résolution : id exact → joker `modid:*` → 0 (non comptabilisé). La communauté coopère pour atteindre l'objectif de la saison (défaut : 1 000 000 points).
 
-### Exemples d'Unités
+### Catégories de points
 
-| Aliment | Nutrition | 1 Stack (64) |
-|---------|-----------|-------------|
-| Steak | 8 | 512 unités |
-| Poulet Cuit | 6 | 384 unités |
-| Pain | 5 | 320 unités |
-| Pomme | 4 | 256 unités |
-| Carotte Dorée | 6 | 384 unités |
+| Catégorie | Points | Exemples |
+|-----------|--------|----------|
+| Normal | **1** | Zombies vanilla, husks, drowned, zombie villagers, tous les zombies Spawn Eggs, tous les mobs Apocalypse Now, infected basiques de Zombie Extreme |
+| Supérieur 1 | **15** | Runner, Infected Police, The Bomber, The Wolf, The Wheezer, Sucker… |
+| Supérieur 2 | **50** | Boomer, Chainsaw, Clicker, Inflated, Spitter, Royal, Hunter, Rabidus… |
+| Supérieur 3 | **100** | Juggernaut, Ram, Night Hunter, Faceless, Pregnant, Lechery, Posessive… |
+| Boss | **2000** | The Heavy, Demolisher, Rat King, Zero Patient, The Clogger, The Lurker |
 
-### Commandes
+Le mapping complet par défaut est livré dans `config/recraftcollect-zombievalues.json`. Modifiez en jeu avec `/zk setvalue <entity_id> <points>` ou éditez le fichier puis rechargez avec `/zk reloadvalues`.
 
-#### Commandes Joueurs
+### Anti-farm
+
+- Pets, loups, golems de fer : ne donnent pas de points.
+- Morts environnementales (lave, chute, suffocation) : ne donnent pas de points.
+- Seul `event.getSource().getEntity() instanceof ServerPlayer` déclenche une attribution.
+
+## Installation
+
+1. Installez **Minecraft Forge 1.20.1-47.2.0** sur votre serveur.
+2. Déposez `recraftcollect-2.0.0.jar` dans le dossier `mods/`.
+3. Démarrez le serveur. `config/recraftcollect-milestones.json` et `config/recraftcollect-zombievalues.json` sont générés automatiquement au premier lancement.
+4. *(Optionnel)* Ajustez les seuils, messages, ou IDs d'entités par mod dans ces fichiers JSON. Rechargez en jeu avec `/zk milestone reload` et `/zk reloadvalues`.
+
+## Commandes
+
+### Commandes joueurs
 
 | Commande | Description |
 |----------|-------------|
-| `/fc` | Affiche l'aide |
-| `/fc score` | Affiche votre score personnel, le score global et la progression |
-| `/fc top` | Affiche le classement des 10 meilleurs joueurs |
-| `/fc deposit` | Dépose la nourriture tenue en main |
-| `/fc depositall` | Dépose toute la nourriture de l'inventaire |
-| `/fc bossbar` | Affiche ou masque la barre de progression (toggle par joueur) |
+| `/zk` | Affiche l'aide |
+| `/zk score` | Votre score, score global et progression |
+| `/zk top` | Top 10 des chasseurs |
+| `/zk bossbar` | Affiche/masque la boss bar (par joueur) |
 
-#### Commandes Admin *(OP 2+)*
+### Commandes admin *(OP 2+)*
 
 | Commande | Description |
 |----------|-------------|
-| `/fc setpoint` | Définit le bloc regardé comme point de collecte |
-| `/fc removepoint` | Supprime le point de collecte |
-| `/fc setgoal <montant>` | Modifie l'objectif (ex : `/fc setgoal 2000000`) |
-| `/fc give <joueur> <montant>` | Attribue des points à un joueur |
-| `/fc take <joueur> <montant>` | Retire des points à un joueur |
-| `/fc setvalue <valeur>` | Définit la valeur de l'item tenu en main |
-| `/fc removevalue` | Supprime la valeur personnalisée de l'item tenu |
-| `/fc listvalues` | Liste toutes les valeurs personnalisées |
-| `/fc setcenter <rayon>` | Définit la zone de visibilité de la boss bar |
-| `/fc removecenter` | Supprime la zone (boss bar visible partout) |
-| `/fc milestone add <seuil> <message>` | Ajoute ou modifie un palier |
-| `/fc milestone remove <seuil>` | Supprime un palier |
-| `/fc milestone addcmd <seuil> <commande>` | Ajoute une commande serveur à un palier |
-| `/fc milestone removecmd <seuil> <index>` | Supprime une commande par index |
-| `/fc milestone list` | Liste tous les paliers |
-| `/fc milestone reload` | Recharge les paliers depuis le fichier config |
-| `/fc milestone resetreached` | Remet tous les paliers a "non atteint" (re-declenchables) |
-| `/fc leaderboard set` | Place le leaderboard (top 10 armor stands) sur le bloc regarde |
-| `/fc leaderboard remove` | Supprime le leaderboard |
-| `/fc leaderboard refresh` | Force la mise a jour du leaderboard |
-| `/fc info` | Affiche les informations détaillées |
-| `/fc reset confirm` | Réinitialise tous les scores et paliers *(OP 3, irréversible)* |
+| `/zk setgoal <montant>` | Modifie l'objectif global (défaut 1 000 000) |
+| `/zk give <joueur> <montant>` | Attribue des points à un joueur |
+| `/zk take <joueur> <montant>` | Retire des points à un joueur |
+| `/zk setvalue <entity_id> <points>` | Définit/met à jour la valeur d'une entité (ex: `/zk setvalue minecraft:zombie 1`, `/zk setvalue zombieextreme:* 1`) |
+| `/zk removevalue <entity_id>` | Retire une entrée du config |
+| `/zk listvalues` | Liste toutes les valeurs, triées par catégorie |
+| `/zk reloadvalues` | Recharge `recraftcollect-zombievalues.json` |
+| `/zk milestone add <seuil> <message>` | Ajoute ou met à jour un palier |
+| `/zk milestone remove <seuil>` | Supprime un palier |
+| `/zk milestone addcmd <seuil> <commande>` | Ajoute une commande serveur déclenchée au franchissement |
+| `/zk milestone removecmd <seuil> <index>` | Retire une commande de palier par index |
+| `/zk milestone list` | Liste tous les paliers avec leurs commandes |
+| `/zk milestone reload` | Recharge `recraftcollect-milestones.json` |
+| `/zk milestone resetreached` | Remet tous les paliers à "non atteint" pour qu'ils se redéclenchent |
+| `/zk leaderboard set` | Place un top 10 en armor stands au-dessus du bloc regardé |
+| `/zk leaderboard remove` | Supprime le leaderboard armor stand |
+| `/zk leaderboard refresh` | Force la mise à jour du leaderboard |
+| `/zk leaderboard show` | Affiche le classement en chat |
+| `/zk setcenter <rayon>` | Restreint la visibilité de la boss bar à un rayon autour du bloc regardé |
+| `/zk removecenter` | Boss bar visible partout |
+| `/zk info` | Informations détaillées |
+| `/zk reset confirm` | **(OP 3, irréversible)** Réinitialise tous les scores et paliers atteints |
 
----
+## Credits
 
-### Author / Auteur
-**@author vyrriox**
+- **Author**: vyrriox
+- **License**: All Rights Reserved
+- **Forge**: [Minecraft Forge](https://files.minecraftforge.net/) 1.20.1-47.2.0
+- **Compatible avec**: Zombie Extreme, Undead Revamp 2, Apocalypse Now, Spawn Eggs, et tout mod ajoutant des zombies (ajoutez les IDs manuellement)
 
-### Links / Liens
-- **Website**: [Arcadia: Echoes Of Power](https://arcadia-echoes-of-power.fr/)
-- **Support**: [Discord](https://discord.gg/xjF8Rtzyd4)
-- **Donation**: [Stripe](https://buy.stripe.com/3cI3co6X97Vy4IK50QfIs00)
+### Liens
+- **Site**: [Arcadia: Echoes Of Power](https://arcadia-echoes-of-power.fr/)
+- **Discord**: [Support](https://discord.gg/xjF8Rtzyd4)
+- **Don**: [Stripe](https://buy.stripe.com/3cI3co6X97Vy4IK50QfIs00)

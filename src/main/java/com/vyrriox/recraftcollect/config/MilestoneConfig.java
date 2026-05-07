@@ -83,21 +83,21 @@ public class MilestoneConfig {
     private static void initDefaults() {
         milestones.clear();
         milestones.add(new MilestoneEntry(10_000L,
-                "Les premiers pas sont faits ! 10 000 unites recoltees !", new ArrayList<>()));
+                "Les premiers morts-vivants tombent ! 10 000 points !", new ArrayList<>()));
         milestones.add(new MilestoneEntry(25_000L,
-                "25 000 unites ! La recolte prend forme !", new ArrayList<>()));
+                "25 000 points ! La purge commence vraiment !", new ArrayList<>()));
         milestones.add(new MilestoneEntry(50_000L,
-                "50 000 unites ! Les greniers commencent a se remplir !", new ArrayList<>()));
+                "50 000 points ! L'horde recule devant vos lames !", new ArrayList<>()));
         milestones.add(new MilestoneEntry(100_000L,
-                "100 000 unites ! Un dixieme de l'objectif !", new ArrayList<>()));
+                "100 000 points ! Un dixieme du monde purge !", new ArrayList<>()));
         milestones.add(new MilestoneEntry(250_000L,
-                "250 000 unites ! Un quart du chemin parcouru !", new ArrayList<>()));
+                "250 000 points ! Un quart de l'invasion eliminee !", new ArrayList<>()));
         milestones.add(new MilestoneEntry(500_000L,
-                "500 000 unites ! La moitie ! Continuez comme ca !", new ArrayList<>()));
+                "500 000 points ! La moitie du monde est sauvee !", new ArrayList<>()));
         milestones.add(new MilestoneEntry(750_000L,
-                "750 000 unites ! Trois quarts ! La ligne d'arrivee approche !", new ArrayList<>()));
+                "750 000 points ! La derniere ligne de defense !", new ArrayList<>()));
         milestones.add(new MilestoneEntry(1_000_000L,
-                "OBJECTIF ATTEINT ! 1 000 000 d'unites ! Felicitations a tous !", new ArrayList<>()));
+                "MONDE PURGE ! 1 000 000 de points ! L'humanite est sauvee !", new ArrayList<>()));
     }
 
     // ─── Getters ───────────────────────────────────────────────

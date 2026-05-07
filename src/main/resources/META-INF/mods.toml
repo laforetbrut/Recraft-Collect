@@ -5,10 +5,10 @@ license = "All Rights Reserved"
 [[mods]]
 modId = "recraftcollect"
 version = "${file.jarVersion}"
-displayName = "ReCraft Collect"
+displayName = "ReCraft Collect - Zombie Purge"
 description = '''
-Collecteur de nourriture communautaire (server-side only).
-Deposez de la nourriture au point de collecte et atteignez l'objectif de 1 000 000 d'unites !
+Comptabilise les kills de zombies en points par categorie (server-side only).
+Tuez des zombies pour atteindre l'objectif communautaire : Purger le monde - 1 000 000 points !
 '''
 authors = "Vyrriox"
 

@@ -106,6 +106,12 @@ public class ZombieValueConfig {
     public static void initDefaults() {
         values.clear();
 
+        // IDs below are extracted directly from the en_us.json language
+        // files of THEUNDEADREVAMPED 1.9o (1.20.1) and Zombie Extreme 0.2.6
+        // (1.20.1). Do not "fix" the apparent typos (devestated, gliter,
+        // theskeeper, thesmoker, slaveman, thebeartamer): those are the
+        // actual registered ids.
+
         // ─── NORMAL ZOMBIES (1 point) ──────────────────────────
         // Vanilla
         put("minecraft:zombie", 1);
@@ -113,16 +119,13 @@ public class ZombieValueConfig {
         put("minecraft:husk", 1);
         put("minecraft:zombie_villager", 1);
 
-        // Spawn Eggs mod (catch-all)
-        put("spawn_eggs:*", 1);
-
         // Zombie Extreme - basic infected
         put("zombie_extreme:infected", 1);
-        put("zombie_extreme:devestated", 1);
+        put("zombie_extreme:devestated", 1);   // sic - real id has typo
         put("zombie_extreme:parasite", 1);
 
         // Undead Revamp 2 - basic
-        put("undead_revamp2:thbidy", 1);
+        put("undead_revamp2:thebidy", 1);
         put("undead_revamp2:theimmortal", 1);
 
         // Apocalypse Now (catch-all for all entities of the mod)
@@ -131,14 +134,14 @@ public class ZombieValueConfig {
         // ─── SUPERIOR 1 (15 points) ────────────────────────────
         put("zombie_extreme:runner", 15);
         put("zombie_extreme:infected_police", 15);
-        put("undead_revamp2:thebomber", 15);
+        put("undead_revamp2:bomber", 15);          // user list: thebomber - real id: bomber
         put("undead_revamp2:therod", 15);
         put("undead_revamp2:thehorrors", 15);
         put("undead_revamp2:thewolf", 15);
-        put("undead_revamp2:thebruin", 15);
-        put("undead_revamp2:thewheezer", 15);
+        put("undead_revamp2:thebeartamer", 15);    // display "The Bruin"
+        put("undead_revamp2:thesmoker", 15);       // display "The Wheezer"
         put("undead_revamp2:sucker", 15);
-        put("undead_revamp2:theskeepper", 15);
+        put("undead_revamp2:theskeeper", 15);      // user list: theskeepper - real id: theskeeper
 
         // ─── SUPERIOR 2 (50 points) ────────────────────────────
         put("zombie_extreme:infected_hazmat", 50);
@@ -150,10 +153,10 @@ public class ZombieValueConfig {
         put("zombie_extreme:inflated", 50);
         put("undead_revamp2:deadclogger", 50);
         put("undead_revamp2:thespitter", 50);
-        put("undead_revamp2:theroyal", 50);
+        put("undead_revamp2:slaveman", 50);        // display "The Royal"
         put("undead_revamp2:thedungeon", 50);
         put("undead_revamp2:theswarmer", 50);
-        put("undead_revamp2:the_moonflower", 50);
+        put("undead_revamp2:the_moonflower", 50);  // sic - this one HAS underscore
         put("undead_revamp2:thehunter", 50);
         put("undead_revamp2:therabidus", 50);
 
@@ -166,7 +169,7 @@ public class ZombieValueConfig {
         put("zombie_extreme:revived", 100);
         put("zombie_extreme:divided", 100);
         put("undead_revamp2:thepregnant", 100);
-        put("undead_revamp2:thegliter", 100);
+        put("undead_revamp2:thegliter", 100);      // sic - real id has typo (one t)
         put("undead_revamp2:bigsucker", 100);
         put("undead_revamp2:lechery", 100);
         put("undead_revamp2:theposessive", 100);

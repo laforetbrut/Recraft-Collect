@@ -9,7 +9,7 @@
 
 ## Features
 
-- **Tiered zombie kill scoring** — Vanilla and modded zombies grant 1, 15, 50, 100 or 2000 points based on tier.
+- **Tiered zombie kill scoring** — Vanilla and modded zombies grant 1, 15, 50, 100 or 1000 points based on tier.
 - **"Purger le monde" boss bar** — Real-time global progress bar with dynamic color (Red → Purple → Yellow → Green) toward 1,000,000 points.
 - **In-game armor-stand leaderboard** — Visual top-10 placed in the world.
 - **Configurable milestones** — JSON-defined thresholds with custom messages and per-milestone server commands.
@@ -28,8 +28,8 @@ When a player kills a zombie (vanilla or from a supported mod), the mod looks up
 | Normal | **1** | Vanilla zombies, husks, drowned, zombie villagers, all Spawn Eggs zombies, all Apocalypse Now mobs, basic Zombie Extreme infected |
 | Superior 1 | **15** | Runner, Infected Police, The Bomber, The Wolf, The Wheezer, Sucker… |
 | Superior 2 | **50** | Boomer, Chainsaw, Clicker, Inflated, Spitter, Royal, Hunter, Rabidus… |
-| Superior 3 | **100** | Juggernaut, Ram, Night Hunter, Faceless, Pregnant, Lechery, Posessive… |
-| Boss | **2000** | The Heavy, Demolisher, Rat King, Zero Patient, The Clogger, The Lurker |
+| Superior 3 | **100** | Juggernaut, Ram, Night Hunter, Faceless, Pregnant, Gliter, Bigsucker, Lechery, Posessive, Clogger… |
+| Boss | **1000** | The Heavy, Demolisher, Rat King, Zero Patient, The Lurker |
 
 The full default mapping ships in `config/recraftcollect-zombievalues.json`. Modify it in-game with `/zk setvalue <entity_id> <points>` or edit the file directly and reload with `/zk reloadvalues`.
 
@@ -102,7 +102,7 @@ Mod server-side de comptage communautaire de kills de zombies pour Minecraft For
 
 ## Caractéristiques
 
-- **Bareme par catégorie** — Les zombies vanilla et modded rapportent 1, 15, 50, 100 ou 2000 points selon leur dangerosité.
+- **Bareme par catégorie** — Les zombies vanilla et modded rapportent 1, 15, 50, 100 ou 1000 points selon leur dangerosité.
 - **Boss bar "Purger le monde"** — Barre de progression globale en temps réel avec couleur dynamique (Rouge → Violet → Jaune → Vert).
 - **Leaderboard armor-stand en jeu** — Top 10 visuel placé dans le monde.
 - **Paliers configurables** — Seuils définis en JSON avec messages personnalisés et commandes serveur exécutées au franchissement.
@@ -121,8 +121,8 @@ Quand un joueur tue un zombie (vanilla ou d'un mod supporté), le mod cherche l'
 | Normal | **1** | Zombies vanilla, husks, drowned, zombie villagers, tous les zombies Spawn Eggs, tous les mobs Apocalypse Now, infected basiques de Zombie Extreme |
 | Supérieur 1 | **15** | Runner, Infected Police, The Bomber, The Wolf, The Wheezer, Sucker… |
 | Supérieur 2 | **50** | Boomer, Chainsaw, Clicker, Inflated, Spitter, Royal, Hunter, Rabidus… |
-| Supérieur 3 | **100** | Juggernaut, Ram, Night Hunter, Faceless, Pregnant, Lechery, Posessive… |
-| Boss | **2000** | The Heavy, Demolisher, Rat King, Zero Patient, The Clogger, The Lurker |
+| Supérieur 3 | **100** | Juggernaut, Ram, Night Hunter, Faceless, Pregnant, Gliter, Bigsucker, Lechery, Posessive, Clogger… |
+| Boss | **1000** | The Heavy, Demolisher, Rat King, Zero Patient, The Lurker |
 
 Le mapping complet par défaut est livré dans `config/recraftcollect-zombievalues.json`. Modifiez en jeu avec `/zk setvalue <entity_id> <points>` ou éditez le fichier puis rechargez avec `/zk reloadvalues`.
 

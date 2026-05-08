@@ -190,7 +190,7 @@ public class ZombieKillCommand {
                 .append(Component.literal(" - Afficher/masquer la barre").withStyle(ChatFormatting.GRAY)), false);
         source.sendSuccess(() -> Component.literal(""), false);
         source.sendSuccess(() -> Component.literal("Tuez des zombies pour gagner des points !").withStyle(ChatFormatting.DARK_GRAY), false);
-        source.sendSuccess(() -> Component.literal("1 / 15 / 50 / 100 / 2000 selon la dangerosite").withStyle(ChatFormatting.DARK_GRAY), false);
+        source.sendSuccess(() -> Component.literal("1 / 15 / 50 / 100 / 1000 selon la dangerosite").withStyle(ChatFormatting.DARK_GRAY), false);
         return 1;
     }
 
@@ -531,7 +531,7 @@ public class ZombieKillCommand {
                 .forEach(entry -> {
                     ChatFormatting color;
                     int v = entry.getValue();
-                    if (v >= 2000) color = ChatFormatting.LIGHT_PURPLE;
+                    if (v >= 1000) color = ChatFormatting.LIGHT_PURPLE;
                     else if (v >= 100) color = ChatFormatting.GOLD;
                     else if (v >= 50) color = ChatFormatting.RED;
                     else if (v >= 15) color = ChatFormatting.YELLOW;

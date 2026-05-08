@@ -254,7 +254,7 @@ public class ReCraftCollect {
 
     private void sendKillFeedback(ServerPlayer player, LivingEntity victim, int points, long totalScore) {
         ChatFormatting color;
-        if (points >= 2000) color = ChatFormatting.LIGHT_PURPLE;
+        if (points >= 1000) color = ChatFormatting.LIGHT_PURPLE;
         else if (points >= 100) color = ChatFormatting.GOLD;
         else if (points >= 50) color = ChatFormatting.RED;
         else if (points >= 15) color = ChatFormatting.YELLOW;
@@ -270,7 +270,7 @@ public class ReCraftCollect {
                     victim.getX(), victim.getY() + victim.getBbHeight() / 2.0, victim.getZ(),
                     Math.min(20, 4 + points / 10), 0.3, 0.3, 0.3, 0.02);
 
-            if (points >= 2000) {
+            if (points >= 1000) {
                 player.playNotifySound(SoundEvents.WITHER_SPAWN, SoundSource.MASTER, 0.6f, 1.2f);
             } else if (points >= 100) {
                 player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.MASTER, 0.5f, 1.5f);

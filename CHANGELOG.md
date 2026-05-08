@@ -15,7 +15,7 @@ All notable changes to ReCraft Collect — Zombie Purge are documented here.
 
 ### Added
 
-- **Tiered zombie kill scoring** — Five point tiers (1 / 15 / 50 / 100 / 2000) covering vanilla zombies and modded zombies (Zombie Extreme, Undead Revamp 2, Apocalypse Now, Spawn Eggs).
+- **Tiered zombie kill scoring** — Five point tiers (1 / 15 / 50 / 100 / 1000) covering vanilla zombies and modded zombies (Zombie Extreme, Undead Revamp 2, Apocalypse Now, Spawn Eggs).
 - **`config/recraftcollect-zombievalues.json`** — Per-entity point values, hot-reloadable, supports `modid:*` wildcards to apply a default to every entity of a given mod.
 - **Direct-kill enforcement** — Only kills where the player is the direct damage source count. Pets, projectiles fired by mobs, and environmental deaths (lava, fall, suffocation) do not award points. Anti-AFK-farm by design.
 - **Per-kill feedback** — Action-bar `+N pts (total)` colored by tier (green/yellow/red/gold/purple) with soul particles on the victim. Higher tiers play a confirmation sound.
@@ -48,7 +48,7 @@ All notable changes to ReCraft Collect — Zombie Purge are documented here.
 
 ### Ajouts
 
-- **Bareme de points par categorie de zombie** — Cinq paliers (1 / 15 / 50 / 100 / 2000) couvrant les zombies vanilla et modded (Zombie Extreme, Undead Revamp 2, Apocalypse Now, Spawn Eggs).
+- **Bareme de points par categorie de zombie** — Cinq paliers (1 / 15 / 50 / 100 / 1000) couvrant les zombies vanilla et modded (Zombie Extreme, Undead Revamp 2, Apocalypse Now, Spawn Eggs).
 - **`config/recraftcollect-zombievalues.json`** — Valeurs en points par entite, rechargeable a chaud, supporte les jokers `modid:*` pour appliquer une valeur par defaut a toutes les entites d'un mod.
 - **Kill direct uniquement** — Seuls les kills ou le joueur est la source directe des degats comptent. Les pets, projectiles tires par des mobs, et morts environnementales (lave, chute, suffocation) ne donnent pas de points. Anti-farm AFK par design.
 - **Feedback par kill** — Action-bar `+N pts (total)` colore par categorie (vert/jaune/rouge/or/violet) avec particules d'ame sur la victime. Les categories elevees jouent un son de confirmation.

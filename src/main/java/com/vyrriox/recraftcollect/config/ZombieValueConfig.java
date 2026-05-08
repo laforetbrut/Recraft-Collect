@@ -113,20 +113,19 @@ public class ZombieValueConfig {
         put("minecraft:husk", 1);
         put("minecraft:zombie_villager", 1);
 
-        // Spawn Eggs mod (catch-all for all its zombies)
+        // Spawn Eggs mod (catch-all)
         put("spawn_eggs:*", 1);
 
-        // Zombie Extreme - basic infected (modid: zombie_extreme)
+        // Zombie Extreme - basic infected
         put("zombie_extreme:infected", 1);
-        put("zombie_extreme:devastated", 1);
+        put("zombie_extreme:devestated", 1);
         put("zombie_extreme:parasite", 1);
 
-        // Undead Revamp 2 - basic (entity names have NO underscores)
-        put("undead_revamp2:thebidy", 1);
+        // Undead Revamp 2 - basic
+        put("undead_revamp2:thbidy", 1);
         put("undead_revamp2:theimmortal", 1);
 
-        // Apocalypse Now (catch-all)
-        put("apocalypsenow:*", 1);
+        // Apocalypse Now (catch-all for all entities of the mod)
         put("apocalypse_now:*", 1);
 
         // ─── SUPERIOR 1 (15 points) ────────────────────────────
@@ -154,7 +153,7 @@ public class ZombieValueConfig {
         put("undead_revamp2:theroyal", 50);
         put("undead_revamp2:thedungeon", 50);
         put("undead_revamp2:theswarmer", 50);
-        put("undead_revamp2:themoonflower", 50);
+        put("undead_revamp2:the_moonflower", 50);
         put("undead_revamp2:thehunter", 50);
         put("undead_revamp2:therabidus", 50);
 
@@ -167,18 +166,18 @@ public class ZombieValueConfig {
         put("zombie_extreme:revived", 100);
         put("zombie_extreme:divided", 100);
         put("undead_revamp2:thepregnant", 100);
-        put("undead_revamp2:theglitter", 100);
-        put("undead_revamp2:thebiggersuck", 100);
-        put("undead_revamp2:thelechery", 100);
+        put("undead_revamp2:thegliter", 100);
+        put("undead_revamp2:bigsucker", 100);
+        put("undead_revamp2:lechery", 100);
         put("undead_revamp2:theposessive", 100);
+        put("undead_revamp2:clogger", 100);
 
-        // ─── BOSS (2000 points) ────────────────────────────────
-        put("undead_revamp2:theheavy", 2000);
-        put("zombie_extreme:demolisher", 2000);
-        put("zombie_extreme:rat_king", 2000);
-        put("zombie_extreme:zero_patient", 2000);
-        put("undead_revamp2:theclogger", 2000);
-        put("undead_revamp2:thelurker", 2000);
+        // ─── BOSS (1000 points) ────────────────────────────────
+        put("undead_revamp2:theheavy", 1000);
+        put("zombie_extreme:demolisher", 1000);
+        put("zombie_extreme:rat_king", 1000);
+        put("zombie_extreme:zero_patient", 1000);
+        put("undead_revamp2:thelurker", 1000);
     }
 
     /**

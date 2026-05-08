@@ -15,11 +15,17 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -143,6 +149,20 @@ public class ZombieKillCommand {
                 .then(Commands.literal("listvalues")
                         .requires(src -> src.hasPermission(2))
                         .executes(ctx -> listZombieValues(ctx.getSource())))
+
+                // Dump every entity id registered for a given modid - use this
+                // to discover the REAL ids (instead of guessing).
+                .then(Commands.literal("listentities")
+                        .requires(src -> src.hasPermission(2))
+                        .then(Commands.argument("modid", StringArgumentType.word())
+                                .executes(ctx -> listEntitiesByMod(ctx.getSource(),
+                                        StringArgumentType.getString(ctx, "modid")))))
+
+                // Print the entity id of the entity the player is looking at -
+                // the fastest way to identify a mob in-world.
+                .then(Commands.literal("identify")
+                        .requires(src -> src.hasPermission(2))
+                        .executes(ctx -> identifyLookedAtEntity(ctx.getSource())))
 
                 .then(Commands.literal("reloadvalues")
                         .requires(src -> src.hasPermission(2))
@@ -548,6 +568,87 @@ public class ZombieKillCommand {
         int count = ZombieValueConfig.getAll().size();
         source.sendSuccess(() -> Component.literal("Config valeurs rechargee: " + count + " entree(s).")
                 .withStyle(ChatFormatting.GREEN), true);
+        return 1;
+    }
+
+    private static int listEntitiesByMod(CommandSourceStack source, String modid) {
+        List<String> matches = new ArrayList<>();
+        for (EntityType<?> type : ForgeRegistries.ENTITY_TYPES.getValues()) {
+            ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(type);
+            if (key != null && key.getNamespace().equalsIgnoreCase(modid)) {
+                matches.add(key.toString());
+            }
+        }
+        matches.sort(String::compareTo);
+
+        source.sendSuccess(() -> Component.literal("=== Entites enregistrees pour " + modid + " (" + matches.size() + ") ===")
+                .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
+
+        if (matches.isEmpty()) {
+            source.sendSuccess(() -> Component.literal("  Aucune entite trouvee. Le mod est-il charge ? Verifiez la casse.")
+                    .withStyle(ChatFormatting.GRAY), false);
+            return 1;
+        }
+
+        for (String id : matches) {
+            int currentValue = ZombieValueConfig.getValue(id);
+            String suffix = currentValue > 0 ? " [" + currentValue + " pts]" : " [non configure]";
+            ChatFormatting suffixColor = currentValue > 0 ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY;
+            source.sendSuccess(() -> Component.literal("  " + id).withStyle(ChatFormatting.WHITE)
+                    .append(Component.literal(suffix).withStyle(suffixColor)), false);
+        }
+        return 1;
+    }
+
+    private static int identifyLookedAtEntity(CommandSourceStack source) {
+        try {
+            ServerPlayer player = source.getPlayerOrException();
+
+            // Ray-trace up to 32 blocks looking for any entity
+            Vec3 eye = player.getEyePosition();
+            Vec3 look = player.getLookAngle();
+            Vec3 end = eye.add(look.scale(32.0));
+
+            Entity hit = null;
+            double bestDist = Double.MAX_VALUE;
+            net.minecraft.world.phys.AABB searchBox = player.getBoundingBox()
+                    .expandTowards(look.scale(32.0)).inflate(1.0);
+
+            for (Entity e : player.level().getEntities(player, searchBox, en -> en != player && en.isAlive())) {
+                var clip = e.getBoundingBox().inflate(0.3).clip(eye, end);
+                if (clip.isPresent()) {
+                    double d = eye.distanceToSqr(clip.get());
+                    if (d < bestDist) {
+                        bestDist = d;
+                        hit = e;
+                    }
+                }
+            }
+
+            if (hit == null) {
+                source.sendFailure(Component.literal("Aucune entite dans votre ligne de mire (max 32 blocs)."));
+                return 0;
+            }
+
+            ResourceLocation key = ForgeRegistries.ENTITY_TYPES.getKey(hit.getType());
+            String id = key != null ? key.toString() : "unknown";
+            String name = hit.getType().getDescription().getString();
+            int currentValue = ZombieValueConfig.getValue(id);
+
+            source.sendSuccess(() -> Component.literal("=== Entite identifiee ===")
+                    .withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD), false);
+            source.sendSuccess(() -> Component.literal("Nom: ").withStyle(ChatFormatting.YELLOW)
+                    .append(Component.literal(name).withStyle(ChatFormatting.WHITE)), false);
+            source.sendSuccess(() -> Component.literal("ID: ").withStyle(ChatFormatting.YELLOW)
+                    .append(Component.literal(id).withStyle(ChatFormatting.AQUA)), false);
+            source.sendSuccess(() -> Component.literal("Valeur actuelle: ").withStyle(ChatFormatting.YELLOW)
+                    .append(Component.literal(currentValue > 0 ? currentValue + " pts" : "non configuree")
+                            .withStyle(currentValue > 0 ? ChatFormatting.GREEN : ChatFormatting.RED)), false);
+            source.sendSuccess(() -> Component.literal("Pour configurer: /zk setvalue " + id + " <points>")
+                    .withStyle(ChatFormatting.DARK_GRAY), false);
+        } catch (Exception e) {
+            source.sendFailure(Component.literal("Cette commande necessite un joueur."));
+        }
         return 1;
     }
 

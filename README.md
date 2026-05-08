@@ -69,6 +69,8 @@ The full default mapping ships in `config/recraftcollect-zombievalues.json`. Mod
 | `/zk removevalue <entity_id>` | Remove an entity entry from the config |
 | `/zk listvalues` | List all configured entity values, sorted by tier |
 | `/zk reloadvalues` | Reload `recraftcollect-zombievalues.json` from disk |
+| `/zk listentities <modid>` | **Diagnostic.** Dump every entity id registered for a mod (e.g. `/zk listentities undead_revamp2`). Shows current point value next to each id. Use this to find the real ids when defaults are wrong. |
+| `/zk identify` | **Diagnostic.** Identify the entity in your line of sight (32 blocks). Shows its registry id and current point value. The fastest way to find a mob's real id in-world. |
 | `/zk resetvalues confirm` | **(OP 3)** Force-regenerate the default v2.0.0 entity-value mapping, overwriting user changes. |
 | `/zk milestone resetdefaults confirm` | **(OP 3)** Force-regenerate the default v2.0.0 milestone messages, overwriting user changes (use this if upgrading from v1.x and milestones still show food-themed text). |
 | `/zk milestone add <threshold> <message>` | Add or update a milestone |
@@ -162,6 +164,8 @@ Le mapping complet par défaut est livré dans `config/recraftcollect-zombievalu
 | `/zk removevalue <entity_id>` | Retire une entrée du config |
 | `/zk listvalues` | Liste toutes les valeurs, triées par catégorie |
 | `/zk reloadvalues` | Recharge `recraftcollect-zombievalues.json` |
+| `/zk listentities <modid>` | **Diagnostic.** Liste toutes les entités enregistrées pour un mod (ex: `/zk listentities undead_revamp2`). Affiche la valeur actuelle de chacune. À utiliser pour trouver les vrais IDs quand les défauts sont faux. |
+| `/zk identify` | **Diagnostic.** Identifie l'entité dans votre ligne de mire (32 blocs). Affiche son ID de registre et sa valeur actuelle. La méthode la plus rapide pour trouver le vrai ID d'un mob en jeu. |
 | `/zk resetvalues confirm` | **(OP 3)** Force la régénération du mapping par défaut v2.0.0, écrase les modifs utilisateur. |
 | `/zk milestone resetdefaults confirm` | **(OP 3)** Force la régénération des messages de paliers par défaut v2.0.0 (utile pour upgrader depuis v1.x si les paliers affichent encore du texte food). |
 | `/zk milestone add <seuil> <message>` | Ajoute ou met à jour un palier |

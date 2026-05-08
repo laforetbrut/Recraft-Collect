@@ -97,7 +97,11 @@ public class ZombieKillCommand {
                         .then(Commands.literal("reload")
                                 .executes(ctx -> reloadMilestones(ctx.getSource())))
                         .then(Commands.literal("resetreached")
-                                .executes(ctx -> resetMilestonesReached(ctx.getSource()))))
+                                .executes(ctx -> resetMilestonesReached(ctx.getSource())))
+                        .then(Commands.literal("resetdefaults")
+                                .requires(src -> src.hasPermission(3))
+                                .then(Commands.literal("confirm")
+                                        .executes(ctx -> resetMilestoneDefaults(ctx.getSource())))))
 
                 // ─── Admin: Leaderboard ────────────────────────
                 .then(Commands.literal("leaderboard")
@@ -120,6 +124,16 @@ public class ZombieKillCommand {
                                                 StringArgumentType.getString(ctx, "entity_id"),
                                                 IntegerArgumentType.getInteger(ctx, "points"))))))
 
+                // Wildcard helper: /zk setmodvalue <modid> <points> applies "modid:*"
+                // Avoids Brigadier rejecting '*' in unquoted single-word args.
+                .then(Commands.literal("setmodvalue")
+                        .requires(src -> src.hasPermission(2))
+                        .then(Commands.argument("modid", StringArgumentType.word())
+                                .then(Commands.argument("points", IntegerArgumentType.integer(0, 100000))
+                                        .executes(ctx -> setModWildcardValue(ctx.getSource(),
+                                                StringArgumentType.getString(ctx, "modid"),
+                                                IntegerArgumentType.getInteger(ctx, "points"))))))
+
                 .then(Commands.literal("removevalue")
                         .requires(src -> src.hasPermission(2))
                         .then(Commands.argument("entity_id", StringArgumentType.string())
@@ -133,6 +147,11 @@ public class ZombieKillCommand {
                 .then(Commands.literal("reloadvalues")
                         .requires(src -> src.hasPermission(2))
                         .executes(ctx -> reloadZombieValues(ctx.getSource())))
+
+                .then(Commands.literal("resetvalues")
+                        .requires(src -> src.hasPermission(3))
+                        .then(Commands.literal("confirm")
+                                .executes(ctx -> resetZombieValuesToDefaults(ctx.getSource()))))
 
                 // ─── Admin: Boss Bar Zone ──────────────────────
                 .then(Commands.literal("setcenter")
@@ -529,6 +548,34 @@ public class ZombieKillCommand {
         int count = ZombieValueConfig.getAll().size();
         source.sendSuccess(() -> Component.literal("Config valeurs rechargee: " + count + " entree(s).")
                 .withStyle(ChatFormatting.GREEN), true);
+        return 1;
+    }
+
+    private static int setModWildcardValue(CommandSourceStack source, String modid, int points) {
+        String key = modid + ":*";
+        ZombieValueConfig.setValue(key, points);
+        source.sendSuccess(() -> Component.literal("Wildcard " + key + " = " + points + " pts (toutes les entites du mod " + modid + ")")
+                .withStyle(ChatFormatting.GREEN), true);
+        return 1;
+    }
+
+    private static int resetZombieValuesToDefaults(CommandSourceStack source) {
+        ZombieValueConfig.resetToDefaults();
+        int count = ZombieValueConfig.getAll().size();
+        source.sendSuccess(() -> Component.literal("Valeurs zombies reinitialisees aux defauts v2.0.0: " + count + " entree(s).")
+                .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD), true);
+        source.sendSuccess(() -> Component.literal("Modifications utilisateur ecrasees. Rechargez les mods cibles si necessaire.")
+                .withStyle(ChatFormatting.DARK_GRAY), false);
+        return 1;
+    }
+
+    private static int resetMilestoneDefaults(CommandSourceStack source) {
+        MilestoneConfig.resetToDefaults();
+        int count = MilestoneConfig.getMilestones().size();
+        source.sendSuccess(() -> Component.literal("Paliers reinitialises aux defauts v2.0.0: " + count + " palier(s).")
+                .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD), true);
+        source.sendSuccess(() -> Component.literal("Les messages des paliers utilisent maintenant le theme \"Purger le monde\".")
+                .withStyle(ChatFormatting.DARK_GRAY), false);
         return 1;
     }
 

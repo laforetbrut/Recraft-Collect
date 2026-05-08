@@ -64,10 +64,13 @@ The full default mapping ships in `config/recraftcollect-zombievalues.json`. Mod
 | `/zk setgoal <amount>` | Set the global goal (default 1,000,000) |
 | `/zk give <player> <amount>` | Award points to a player |
 | `/zk take <player> <amount>` | Remove points from a player |
-| `/zk setvalue <entity_id> <points>` | Set or update an entity's point value (e.g. `/zk setvalue minecraft:zombie 1`, `/zk setvalue zombieextreme:* 1`) |
+| `/zk setvalue <entity_id> <points>` | Set or update an entity's point value (e.g. `/zk setvalue minecraft:zombie 1`). For wildcards containing `*`, see `/zk setmodvalue`. |
+| `/zk setmodvalue <modid> <points>` | Apply a wildcard value to **every** entity of a mod (writes `<modid>:*`). Avoids the Brigadier limitation that rejects unquoted `*`. Example: `/zk setmodvalue apocalypsenow 1`. |
 | `/zk removevalue <entity_id>` | Remove an entity entry from the config |
 | `/zk listvalues` | List all configured entity values, sorted by tier |
 | `/zk reloadvalues` | Reload `recraftcollect-zombievalues.json` from disk |
+| `/zk resetvalues confirm` | **(OP 3)** Force-regenerate the default v2.0.0 entity-value mapping, overwriting user changes. |
+| `/zk milestone resetdefaults confirm` | **(OP 3)** Force-regenerate the default v2.0.0 milestone messages, overwriting user changes (use this if upgrading from v1.x and milestones still show food-themed text). |
 | `/zk milestone add <threshold> <message>` | Add or update a milestone |
 | `/zk milestone remove <threshold>` | Remove a milestone |
 | `/zk milestone addcmd <threshold> <command>` | Add a server command triggered when the milestone is reached |
@@ -154,10 +157,13 @@ Le mapping complet par défaut est livré dans `config/recraftcollect-zombievalu
 | `/zk setgoal <montant>` | Modifie l'objectif global (défaut 1 000 000) |
 | `/zk give <joueur> <montant>` | Attribue des points à un joueur |
 | `/zk take <joueur> <montant>` | Retire des points à un joueur |
-| `/zk setvalue <entity_id> <points>` | Définit/met à jour la valeur d'une entité (ex: `/zk setvalue minecraft:zombie 1`, `/zk setvalue zombieextreme:* 1`) |
+| `/zk setvalue <entity_id> <points>` | Définit/met à jour la valeur d'une entité (ex: `/zk setvalue minecraft:zombie 1`). Pour les wildcards contenant `*`, utilisez `/zk setmodvalue`. |
+| `/zk setmodvalue <modid> <points>` | Applique une valeur wildcard à **toutes** les entités d'un mod (écrit `<modid>:*`). Contourne la limitation Brigadier qui refuse `*` non-quoté. Exemple : `/zk setmodvalue apocalypsenow 1`. |
 | `/zk removevalue <entity_id>` | Retire une entrée du config |
 | `/zk listvalues` | Liste toutes les valeurs, triées par catégorie |
 | `/zk reloadvalues` | Recharge `recraftcollect-zombievalues.json` |
+| `/zk resetvalues confirm` | **(OP 3)** Force la régénération du mapping par défaut v2.0.0, écrase les modifs utilisateur. |
+| `/zk milestone resetdefaults confirm` | **(OP 3)** Force la régénération des messages de paliers par défaut v2.0.0 (utile pour upgrader depuis v1.x si les paliers affichent encore du texte food). |
 | `/zk milestone add <seuil> <message>` | Ajoute ou met à jour un palier |
 | `/zk milestone remove <seuil>` | Supprime un palier |
 | `/zk milestone addcmd <seuil> <commande>` | Ajoute une commande serveur déclenchée au franchissement |

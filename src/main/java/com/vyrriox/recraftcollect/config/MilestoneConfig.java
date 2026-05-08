@@ -80,6 +80,16 @@ public class MilestoneConfig {
         }
     }
 
+    /**
+     * Force-regenerates the default zombie-purge milestones, overwriting any
+     * existing user config and writing the result to disk. Used by
+     * /zk milestone resetdefaults to upgrade v1.x configs to v2.x messages.
+     */
+    public static void resetToDefaults() {
+        initDefaults();
+        save();
+    }
+
     private static void initDefaults() {
         milestones.clear();
         milestones.add(new MilestoneEntry(10_000L,

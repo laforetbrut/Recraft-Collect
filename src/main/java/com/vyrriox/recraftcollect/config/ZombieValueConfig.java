@@ -103,7 +103,7 @@ public class ZombieValueConfig {
     // based on conventional Forge naming. Adjust in-game with /zk setvalue
     // if any are wrong. Use "modid:*" wildcard to catch all entities of a mod.
 
-    private static void initDefaults() {
+    public static void initDefaults() {
         values.clear();
 
         // ─── NORMAL ZOMBIES (1 point) ──────────────────────────
@@ -116,69 +116,78 @@ public class ZombieValueConfig {
         // Spawn Eggs mod (catch-all for all its zombies)
         put("spawn_eggs:*", 1);
 
-        // Zombie Extreme - basic infected
-        put("zombieextreme:infected", 1);
-        put("zombieextreme:devastated", 1);
-        put("zombieextreme:parasite", 1);
+        // Zombie Extreme - basic infected (modid: zombie_extreme)
+        put("zombie_extreme:infected", 1);
+        put("zombie_extreme:devastated", 1);
+        put("zombie_extreme:parasite", 1);
 
-        // Undead Revamp 2 - basic
-        put("undead_revamp2:the_bidy", 1);
-        put("undead_revamp2:the_immortal", 1);
+        // Undead Revamp 2 - basic (entity names have NO underscores)
+        put("undead_revamp2:thebidy", 1);
+        put("undead_revamp2:theimmortal", 1);
 
         // Apocalypse Now (catch-all)
         put("apocalypsenow:*", 1);
         put("apocalypse_now:*", 1);
 
         // ─── SUPERIOR 1 (15 points) ────────────────────────────
-        put("zombieextreme:runner", 15);
-        put("zombieextreme:infected_police", 15);
-        put("undead_revamp2:the_bomber", 15);
-        put("undead_revamp2:the_rod", 15);
-        put("undead_revamp2:the_horrors", 15);
-        put("undead_revamp2:the_wolf", 15);
-        put("undead_revamp2:the_bruin", 15);
-        put("undead_revamp2:the_wheezer", 15);
+        put("zombie_extreme:runner", 15);
+        put("zombie_extreme:infected_police", 15);
+        put("undead_revamp2:thebomber", 15);
+        put("undead_revamp2:therod", 15);
+        put("undead_revamp2:thehorrors", 15);
+        put("undead_revamp2:thewolf", 15);
+        put("undead_revamp2:thebruin", 15);
+        put("undead_revamp2:thewheezer", 15);
         put("undead_revamp2:sucker", 15);
-        put("undead_revamp2:the_skeepper", 15);
+        put("undead_revamp2:theskeepper", 15);
 
         // ─── SUPERIOR 2 (50 points) ────────────────────────────
-        put("zombieextreme:infected_hazmat", 50);
-        put("zombieextreme:infected_military", 50);
-        put("zombieextreme:boomer", 50);
-        put("zombieextreme:chainsaw", 50);
-        put("zombieextreme:explosive_infected", 50);
-        put("zombieextreme:clicker", 50);
-        put("zombieextreme:inflated", 50);
-        put("undead_revamp2:dead_clogger", 50);
-        put("undead_revamp2:the_spitter", 50);
-        put("undead_revamp2:the_royal", 50);
-        put("undead_revamp2:the_dungeon", 50);
-        put("undead_revamp2:the_swarmer", 50);
-        put("undead_revamp2:the_moonflower", 50);
-        put("undead_revamp2:the_hunter", 50);
-        put("undead_revamp2:the_rabidus", 50);
+        put("zombie_extreme:infected_hazmat", 50);
+        put("zombie_extreme:infected_military", 50);
+        put("zombie_extreme:boomer", 50);
+        put("zombie_extreme:chainsaw", 50);
+        put("zombie_extreme:explosive_infected", 50);
+        put("zombie_extreme:clicker", 50);
+        put("zombie_extreme:inflated", 50);
+        put("undead_revamp2:deadclogger", 50);
+        put("undead_revamp2:thespitter", 50);
+        put("undead_revamp2:theroyal", 50);
+        put("undead_revamp2:thedungeon", 50);
+        put("undead_revamp2:theswarmer", 50);
+        put("undead_revamp2:themoonflower", 50);
+        put("undead_revamp2:thehunter", 50);
+        put("undead_revamp2:therabidus", 50);
 
         // ─── SUPERIOR 3 (100 points) ───────────────────────────
-        put("zombieextreme:infected_juggernaut", 100);
-        put("zombieextreme:ram", 100);
-        put("zombieextreme:night_hunter", 100);
-        put("zombieextreme:faceless", 100);
-        put("zombieextreme:goon", 100);
-        put("zombieextreme:revived", 100);
-        put("zombieextreme:divided", 100);
-        put("undead_revamp2:the_pregnant", 100);
-        put("undead_revamp2:the_glitter", 100);
-        put("undead_revamp2:the_bigger_suck", 100);
-        put("undead_revamp2:the_lechery", 100);
-        put("undead_revamp2:the_posessive", 100);
+        put("zombie_extreme:infected_juggernaut", 100);
+        put("zombie_extreme:ram", 100);
+        put("zombie_extreme:night_hunter", 100);
+        put("zombie_extreme:faceless", 100);
+        put("zombie_extreme:goon", 100);
+        put("zombie_extreme:revived", 100);
+        put("zombie_extreme:divided", 100);
+        put("undead_revamp2:thepregnant", 100);
+        put("undead_revamp2:theglitter", 100);
+        put("undead_revamp2:thebiggersuck", 100);
+        put("undead_revamp2:thelechery", 100);
+        put("undead_revamp2:theposessive", 100);
 
         // ─── BOSS (2000 points) ────────────────────────────────
-        put("undead_revamp2:the_heavy", 2000);
-        put("zombieextreme:demolisher", 2000);
-        put("zombieextreme:rat_king", 2000);
-        put("zombieextreme:zero_patient", 2000);
-        put("undead_revamp2:the_clogger", 2000);
-        put("undead_revamp2:the_lurker", 2000);
+        put("undead_revamp2:theheavy", 2000);
+        put("zombie_extreme:demolisher", 2000);
+        put("zombie_extreme:rat_king", 2000);
+        put("zombie_extreme:zero_patient", 2000);
+        put("undead_revamp2:theclogger", 2000);
+        put("undead_revamp2:thelurker", 2000);
+    }
+
+    /**
+     * Force-regenerates the defaults, overwriting any user-modified values
+     * and writing them to disk.
+     */
+    public static void resetToDefaults() {
+        initDefaults();
+        save();
     }
 
     private static void put(String id, int value) {

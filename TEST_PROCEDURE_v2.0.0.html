@@ -4,23 +4,35 @@
 <meta charset="UTF-8">
 <title>Test Procedure - ReCraft Collect Zombie Purge v2.0.0</title>
 <style>
-  :root { color-scheme: light dark; }
-  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 1080px; margin: 2rem auto; padding: 0 1.5rem; line-height: 1.55; }
-  h1 { color: #8b0000; border-bottom: 3px solid #8b0000; padding-bottom: 0.4rem; }
-  h2 { color: #5a5a5a; margin-top: 2.2rem; }
-  h3 { color: #333; margin-top: 1.5rem; padding-left: 0.6rem; border-left: 4px solid #8b0000; }
-  .meta { background: #f4f4f4; padding: 0.8rem 1rem; border-radius: 6px; font-size: 0.9rem; color: #444; }
-  .block { background: #fafafa; border: 1px solid #ddd; padding: 1rem 1.2rem; margin: 0.8rem 0; border-radius: 6px; }
-  .case { padding: 0.4rem 0.2rem; }
-  .case label { display: flex; align-items: flex-start; gap: 0.5rem; cursor: pointer; }
-  input[type="checkbox"] { margin-top: 0.3rem; flex-shrink: 0; }
-  .steps { font-size: 0.92rem; color: #555; margin-left: 1.7rem; padding-left: 0.4rem; border-left: 2px solid #ccc; }
-  .expected { font-size: 0.92rem; color: #006400; margin-left: 1.7rem; padding-left: 0.4rem; }
-  .warn { background: #fff7e6; border: 1px solid #f5c97f; padding: 0.7rem 1rem; border-radius: 6px; }
-  code { background: #eee; padding: 0.1rem 0.35rem; border-radius: 3px; font-family: Consolas, "Courier New", monospace; font-size: 0.92em; }
-  hr { border: none; border-top: 1px dashed #ccc; margin: 2.5rem 0; }
-  .lang { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 3px; font-size: 0.75rem; background: #8b0000; color: white; vertical-align: middle; }
+  :root { color-scheme: light only; }
+  html, body { background: #ffffff; color: #1a1a1a; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 1080px; margin: 2rem auto; padding: 0 1.5rem; line-height: 1.6; font-size: 15px; }
+  h1 { color: #8b0000; border-bottom: 3px solid #8b0000; padding-bottom: 0.4rem; margin-top: 0; }
+  h2 { color: #222; margin-top: 2.4rem; padding: 0.4rem 0.8rem; background: #f0e6e6; border-left: 6px solid #8b0000; border-radius: 0 4px 4px 0; }
+  h3 { color: #1a1a1a; margin-top: 1.6rem; padding-left: 0.6rem; border-left: 4px solid #c0392b; }
+  p, li { color: #1a1a1a; }
+  .meta { background: #f8f8f8; padding: 1rem 1.2rem; border-radius: 6px; font-size: 0.95rem; color: #1a1a1a; border: 1px solid #d0d0d0; }
+  .block { background: #fafafa; border: 1px solid #d0d0d0; padding: 1rem 1.2rem; margin: 0.9rem 0; border-radius: 6px; color: #1a1a1a; }
+  .case { padding: 0.55rem 0.2rem; border-bottom: 1px dotted #e0e0e0; }
+  .case:last-child { border-bottom: none; }
+  .case label { display: flex; align-items: flex-start; gap: 0.6rem; cursor: pointer; color: #1a1a1a; font-weight: 500; }
+  .case label strong { color: #1a1a1a; }
+  input[type="checkbox"] { margin-top: 0.35rem; flex-shrink: 0; width: 16px; height: 16px; cursor: pointer; }
+  .steps { font-size: 0.92rem; color: #444; margin: 0.3rem 0 0 1.9rem; padding-left: 0.6rem; border-left: 3px solid #b0b0b0; }
+  .expected { font-size: 0.92rem; color: #145214; margin: 0.3rem 0 0 1.9rem; padding-left: 0.6rem; border-left: 3px solid #2e7d32; font-weight: 500; }
+  .expected::before { content: "✓ "; color: #2e7d32; font-weight: 700; }
+  .warn { background: #fff8e1; border: 1px solid #f0c060; padding: 0.9rem 1.2rem; border-radius: 6px; color: #5a4500; }
+  .warn ul { margin: 0.4rem 0; padding-left: 1.4rem; }
+  .warn li { color: #5a4500; margin: 0.4rem 0; }
+  .warn strong { color: #3a2f00; }
+  code { background: #ececec; padding: 0.1rem 0.4rem; border-radius: 3px; font-family: Consolas, "Courier New", monospace; font-size: 0.9em; color: #8b0000; border: 1px solid #d8d8d8; }
+  hr { border: none; border-top: 2px dashed #c0c0c0; margin: 2.5rem 0; }
+  .lang { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 3px; font-size: 0.72rem; background: #8b0000; color: #ffffff; vertical-align: middle; font-weight: 700; letter-spacing: 0.5px; }
   .fr { background: #1e4d8b; }
+  @media print {
+    body { max-width: none; }
+    .case { break-inside: avoid; }
+  }
 </style>
 </head>
 <body>
@@ -70,7 +82,7 @@
   </div>
   <div class="case">
     <label><input type="checkbox"> <strong>Modded "Superior 1" zombie = 15 points</strong></label>
-    <div class="steps">If Zombie Extreme is installed, summon a Runner with <code>/summon zombieextreme:runner</code> and kill it.</div>
+    <div class="steps">If Zombie Extreme is installed, summon a Runner with <code>/summon zombie_extreme:runner</code> and kill it.</div>
     <div class="expected">Expected: action-bar shows <code>+15 pts</code> in yellow.</div>
   </div>
   <div class="case">
